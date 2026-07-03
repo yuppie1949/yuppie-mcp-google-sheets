@@ -36,7 +36,8 @@ base64 -i your-credentials.json
       "command": "uvx",
       "args": ["--refresh", "yuppie-mcp-google-sheets"],
       "env": {
-        "GOOGLE_CREDENTIALS_B64": "<your-base64-credentials>"
+        "GOOGLE_CREDENTIALS_B64": "<your-base64-credentials>",
+        "GOOGLE_APPS_SCRIPT_URL": "<your_google_apps_script_url_here>"
       }
     }
   }
@@ -56,6 +57,7 @@ base64 -i your-credentials.json
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `GOOGLE_CREDENTIALS_B64` | 是 | - | Google 服务账号 JSON 密钥的 base64 编码 |
+| `GOOGLE_APPS_SCRIPT_URL` | 否 | - | Google Apps Script URL，`gsheets_copy_file` 需要 |
 
 ## 可用工具（共 28 个）
 
