@@ -10,7 +10,10 @@ from pydantic import Field
 from . import __version__
 from .tools import drive, sheets, sheets_quick
 
-mcp = FastMCP("google_sheets_mcp")
+mcp = FastMCP(
+    name="google_sheets_mcp",
+    instructions="Google Sheets 和 Google Drive 操作工具集：读写电子表格范围、管理工作表（新增/复制/删除/重命名/清空）、追加数据、批量数据处理（更新/追加/按批次读写）、Auto-resize 行列、设置单元格格式/边框、保护范围、条件格式、图表创建、Google Drive 文件浏览和搜索。"
+)
 mcp._mcp_server.version = __version__
 
 

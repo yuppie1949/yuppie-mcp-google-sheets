@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yuppie-mcp-google-sheets"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP Server for Google Sheets API"
 readme = "README.md"
 license = "MIT"
