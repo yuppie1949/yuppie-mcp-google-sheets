@@ -54,7 +54,6 @@ def test_google_sheets_client_aggregates_all_mixins() -> None:
     assert callable(getattr(client, "update_data", None))
     assert callable(getattr(client, "batch_update_data", None))
     assert callable(getattr(client, "batch_clear", None))
-    assert callable(getattr(client, "visualization_query", None))
     # 格式域
     assert callable(getattr(client, "set_basic_filter", None))
     assert callable(getattr(client, "set_data_validation", None))
@@ -71,3 +70,25 @@ def test_google_sheets_client_aggregates_all_mixins() -> None:
     assert callable(getattr(client, "list_files", None))
     assert callable(getattr(client, "copy_file", None))
     assert callable(getattr(client, "get_storage_quota", None))
+
+
+def test_visualization_client_import_and_parse() -> None:
+    """VisualizationClient 导入和解析纯函数测试"""
+    from yuppie_mcp_google_sheets.utils.google.visualization import (
+        VisualizationClient,
+        _parse_gviz_response,
+        _transform_table,
+    )
+
+    assert VisualizationClient is not None
+
+    # _transform_table 纯函数
+    table = {
+        "cols": [{"id": "A", "label": "Name", "type": "string"}],
+        "rows": [{"c": [{"v": "Alice"}]}, {"c": [{"v": "Bob"}]}],
+    }
+    cols, rows = _transform_table(table)
+    assert len(cols) == 1
+    assert cols[0]["label"] == "Name"
+    assert len(rows) == 2
+    assert rows[0]["Name"] == "Alice"

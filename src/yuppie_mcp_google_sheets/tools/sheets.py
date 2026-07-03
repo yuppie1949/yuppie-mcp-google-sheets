@@ -9,8 +9,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ..utils.config import GoogleConfig
 from ..utils.google import GoogleSheetsClient
+from ..utils.google.visualization import VisualizationClient
 
 _client: GoogleSheetsClient | None = None
+_viz_client: VisualizationClient | None = None
+
+
+def _get_viz_client() -> VisualizationClient:
+    global _viz_client
+    if _viz_client is None:
+        GoogleConfig.from_env()
+        _viz_client = VisualizationClient()
+    return _viz_client
 
 
 def _get_client() -> GoogleSheetsClient:
@@ -287,8 +297,8 @@ async def batch_clear(args: BatchClearInput) -> str:
 async def visualization_query(args: VisualizationQueryInput) -> str:
     try:
         _t0 = time.time()
-        client = _get_client()
-        result = client.visualization_query(
+        client = _get_viz_client()
+        result = client.query(
             args.spreadsheet_id,
             args.query,
             sheet_name=args.sheet_name,
