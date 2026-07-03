@@ -93,19 +93,19 @@ class WorksheetMixin:
         spreadsheet_id: str,
         sheet_name: str,
         total_rows: int,
-        data_start_row: int = 2,
+        data_start: int = 2,
     ) -> dict[str, Any]:
         """调整工作表行数并清空旧数据区域"""
         try:
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
             worksheet = spreadsheet.worksheet(sheet_name)
-            min_rows = total_rows + (data_start_row - 1)
+            min_rows = total_rows + (data_start - 1)
             current_rows = worksheet.row_count
             current_cols = worksheet.col_count
             if current_rows != min_rows:
                 worksheet.resize(rows=min_rows)
             max_col = self._index_to_letter(current_cols - 1)
-            clear_range = f"A{data_start_row}:{max_col}{min_rows}"
+            clear_range = f"A{data_start}:{max_col}{min_rows}"
             worksheet.batch_clear([clear_range])
             return {"success": True, "data": {"row_count": min_rows, "clear_range": clear_range}}
         except Exception as e:

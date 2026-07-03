@@ -49,12 +49,13 @@ class FormatMixin:
         sheet_name: str,
         column_name: str,
         dropdown_options: list[str],
-        header_row: int = 1,
+        data_start: int = 2,
     ) -> dict[str, Any]:
         """为列设置下拉列表"""
         try:
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
             ws = spreadsheet.worksheet(sheet_name)
+            header_row = data_start - 1
             headers = ws.row_values(header_row)
             try:
                 col_index = headers.index(column_name)
@@ -65,7 +66,7 @@ class FormatMixin:
                 "setDataValidation": {
                     "range": {
                         "sheetId": ws.id,
-                        "startRowIndex": header_row,
+                        "startRowIndex": data_start - 1,
                         "endRowIndex": ws.row_count,
                         "startColumnIndex": col_index,
                         "endColumnIndex": col_index + 1,
@@ -89,7 +90,7 @@ class FormatMixin:
         self: _GoogleProtocol,
         spreadsheet_id: str,
         sheet_name: str,
-        data_start_row: int,
+        data_start: int,
         height: int,
     ) -> dict[str, Any]:
         """设置工作表行高"""
@@ -101,7 +102,7 @@ class FormatMixin:
                     "range": {
                         "sheetId": ws.id,
                         "dimension": "ROWS",
-                        "startIndex": data_start_row - 1,
+                        "startIndex": data_start - 1,
                         "endIndex": ws.row_count,
                     },
                     "properties": {"pixelSize": height},

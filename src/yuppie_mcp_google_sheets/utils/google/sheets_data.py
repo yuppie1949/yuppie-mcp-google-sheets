@@ -32,7 +32,7 @@ class DataMixin:
         spreadsheet_id: str,
         sheet_name: str,
         data: list[list[Any]],
-        start_row: int = 2,
+        data_start: int = 2,
         chunk_size: int = 5000,
         value_input_option: str = "USER_ENTERED",
         sleep_interval: float = 1.0,
@@ -47,7 +47,7 @@ class DataMixin:
                 chunk = data[i : i + chunk_size]
                 ws.update(
                     values=chunk,
-                    range_name=f"A{start_row + i}",
+                    range_name=f"A{data_start + i}",
                     value_input_option=value_input_option,
                 )
                 if sleep_interval > 0 and (i // chunk_size + 1) < chunks:

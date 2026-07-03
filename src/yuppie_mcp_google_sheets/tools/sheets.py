@@ -77,7 +77,7 @@ class BatchUpdateDataInput(BaseModel):
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
     sheet_name: str = Field(..., min_length=1, description="工作表名称")
     data: list[list[Any]] = Field(..., description="二维数据列表")
-    start_row: int = Field(2, ge=1, description="数据起始行号（1-based），默认 2")
+    data_start: int = Field(2, ge=1, description="数据起始行号（1-based），默认 2")
     chunk_size: int = Field(5000, ge=1, le=5000, description="每块写入行数")
     sleep_interval: float = Field(1.0, ge=0, description="每块写入间隔秒数")
 
@@ -118,7 +118,7 @@ class SetDataValidationInput(BaseModel):
     sheet_name: str = Field(..., min_length=1, description="工作表名称")
     column_name: str = Field(..., min_length=1, description="列名称")
     dropdown_options: list[str] = Field(..., min_length=1, description="下拉选项列表")
-    header_row: int = Field(1, ge=1, description="表头所在行号")
+    data_start: int = Field(2, ge=1, description="数据起始行号，表头=data_start-1，默认 2")
 
 
 class SetRowHeightInput(BaseModel):
@@ -126,7 +126,7 @@ class SetRowHeightInput(BaseModel):
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
     sheet_name: str = Field(..., min_length=1, description="工作表名称")
-    data_start_row: int = Field(..., ge=1, description="数据开始行号（1-based）")
+    data_start: int = Field(..., ge=1, description="数据起始行号（1-based）")
     height: int = Field(..., ge=1, description="行高（像素）")
 
 
@@ -263,7 +263,7 @@ async def batch_update_data(args: BatchUpdateDataInput) -> str:
             args.spreadsheet_id,
             args.sheet_name,
             args.data,
-            start_row=args.start_row,
+            data_start=args.data_start,
             chunk_size=args.chunk_size,
             sleep_interval=args.sleep_interval,
         )
@@ -353,7 +353,7 @@ async def set_data_validation(args: SetDataValidationInput) -> str:
             args.sheet_name,
             args.column_name,
             args.dropdown_options,
-            header_row=args.header_row,
+            data_start=args.data_start,
         )
     except Exception as e:
         return f"❌ 设置数据验证失败：{e}"
@@ -370,7 +370,7 @@ async def set_row_height(args: SetRowHeightInput) -> str:
     try:
         client = _get_client()
         result = client.set_row_height(
-            args.spreadsheet_id, args.sheet_name, args.data_start_row, args.height
+            args.spreadsheet_id, args.sheet_name, args.data_start, args.height
         )
     except Exception as e:
         return f"❌ 设置行高失败：{e}"

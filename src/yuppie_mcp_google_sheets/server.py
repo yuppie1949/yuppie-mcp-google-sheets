@@ -247,7 +247,7 @@ async def tool_batch_update_data(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
     sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
     data: Annotated[list[list[Any]], Field(description="二维数据列表")],
-    start_row: Annotated[int, Field(description="数据起始行号（1-based），默认 2", ge=1)] = 2,
+    data_start: Annotated[int, Field(description="数据起始行号（1-based），默认 2", ge=1)] = 2,
     chunk_size: Annotated[int, Field(description="每块写入行数，默认 5000", ge=1, le=5000)] = 5000,
     sleep_interval: Annotated[float, Field(description="每块写入间隔秒数，默认 1.0", ge=0)] = 1.0,
 ) -> str:
@@ -257,7 +257,7 @@ async def tool_batch_update_data(
             spreadsheet_id=spreadsheet_id,
             sheet_name=sheet_name,
             data=data,
-            start_row=start_row,
+            data_start=data_start,
             chunk_size=chunk_size,
             sleep_interval=sleep_interval,
         )
@@ -373,7 +373,9 @@ async def tool_set_data_validation(
     sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
     column_name: Annotated[str, Field(description="列名称", min_length=1)],
     dropdown_options: Annotated[list[str], Field(description="下拉选项列表", min_length=1)],
-    header_row: Annotated[int, Field(description="表头所在行号，默认 1", ge=1)] = 1,
+    data_start: Annotated[
+        int, Field(description="数据起始行号，表头=data_start-1，默认 2", ge=1)
+    ] = 2,
 ) -> str:
     """为列设置下拉列表（数据验证）。"""
     return await sheets.set_data_validation(
@@ -382,7 +384,7 @@ async def tool_set_data_validation(
             sheet_name=sheet_name,
             column_name=column_name,
             dropdown_options=dropdown_options,
-            header_row=header_row,
+            data_start=data_start,
         )
     )
 
@@ -400,7 +402,7 @@ async def tool_set_data_validation(
 async def tool_set_row_height(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
     sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
-    data_start_row: Annotated[int, Field(description="数据开始行号（1-based）", ge=1)],
+    data_start: Annotated[int, Field(description="数据起始行号（1-based）", ge=1)],
     height: Annotated[int, Field(description="行高（像素）", ge=1)],
 ) -> str:
     """设置工作表行高（从指定行到末尾）。"""
@@ -408,7 +410,7 @@ async def tool_set_row_height(
         sheets.SetRowHeightInput(
             spreadsheet_id=spreadsheet_id,
             sheet_name=sheet_name,
-            data_start_row=data_start_row,
+            data_start=data_start,
             height=height,
         )
     )

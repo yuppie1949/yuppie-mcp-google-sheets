@@ -79,7 +79,7 @@ def test_batch_update_data_defaults() -> None:
     args = BatchUpdateDataInput(
         spreadsheet_id="sid", sheet_name="Sheet1", data=[["a"]]
     )
-    assert args.start_row == 2
+    assert args.data_start == 2
     assert args.chunk_size == 5000
 
 
@@ -117,13 +117,13 @@ def test_set_data_validation_valid() -> None:
         column_name="Status", dropdown_options=["Open", "Closed"],
     )
     assert len(args.dropdown_options) == 2
-    assert args.header_row == 1
+    assert args.data_start == 2
 
 
 def test_set_row_height_valid() -> None:
     args = SetRowHeightInput(
         spreadsheet_id="sid", sheet_name="Sheet1",
-        data_start_row=2, height=40,
+        data_start=2, height=40,
     )
     assert args.height == 40
 
