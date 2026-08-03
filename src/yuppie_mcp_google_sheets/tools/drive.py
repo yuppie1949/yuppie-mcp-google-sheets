@@ -129,9 +129,7 @@ async def copy_file(args: CopyFileInput) -> str:
     try:
         _t0 = time.time()
         client = _get_client()
-        result = client.copy_file(
-            args.file_id, args.target_folder_id, new_name=args.new_name
-        )
+        result = client.copy_file(args.file_id, args.target_folder_id, new_name=args.new_name)
         _elapsed = time.time() - _t0
     except Exception as e:
         return f"❌ 复制文件失败：{e}"

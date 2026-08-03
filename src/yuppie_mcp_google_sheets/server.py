@@ -3,19 +3,23 @@
 import os
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from . import __version__
 from .tools import drive, sheets, sheets_quick
 
-mcp = FastMCP(
+mcp = MCPServer(
     name="google_sheets_mcp",
-    host=os.getenv("MCP_HOST", "127.0.0.1"),
-    instructions="Google Sheets 和 Google Drive 操作工具集：读写电子表格范围、管理工作表（新增/复制/删除/重命名/清空）、追加数据、批量数据处理（更新/追加/按批次读写）、Auto-resize 行列、设置单元格格式/边框、保护范围、条件格式、图表创建、Google Drive 文件浏览和搜索。"
+    instructions=(
+        "Google Sheets 和 Google Drive 操作工具集：读写电子表格范围、管理工作表"
+        "（新增/复制/删除/重命名/清空）、追加数据、批量数据处理（更新/追加/按批次读写）、"
+        "Auto-resize 行列、设置单元格格式/边框、保护范围、条件格式、图表创建、"
+        "Google Drive 文件浏览和搜索。"
+    ),
+    version=__version__,
 )
-mcp._mcp_server.version = __version__
 
 
 # ═══════════════════════════════════════════
@@ -27,10 +31,10 @@ mcp._mcp_server.version = __version__
     name="gsheets_list_files",
     annotations=ToolAnnotations(
         title="列出 Drive 文件夹中的文件",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_list_files(
@@ -48,10 +52,10 @@ async def tool_list_files(
     name="gsheets_filter_and_sort_files",
     annotations=ToolAnnotations(
         title="按文件名过滤排序",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_filter_and_sort_files(
@@ -77,10 +81,10 @@ async def tool_filter_and_sort_files(
     name="gsheets_get_storage_quota",
     annotations=ToolAnnotations(
         title="查询 Drive 存储配额",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_get_storage_quota() -> str:
@@ -92,10 +96,10 @@ async def tool_get_storage_quota() -> str:
     name="gsheets_copy_file",
     annotations=ToolAnnotations(
         title="复制 Drive 文件",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_copy_file(
@@ -105,9 +109,7 @@ async def tool_copy_file(
 ) -> str:
     """通过 Google Apps Script 复制文件到指定文件夹（解决服务账号存储配额限制）。"""
     return await drive.copy_file(
-        drive.CopyFileInput(
-            file_id=file_id, target_folder_id=target_folder_id, new_name=new_name
-        )
+        drive.CopyFileInput(file_id=file_id, target_folder_id=target_folder_id, new_name=new_name)
     )
 
 
@@ -120,10 +122,10 @@ async def tool_copy_file(
     name="gsheets_get_worksheet",
     annotations=ToolAnnotations(
         title="获取工作表信息",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_get_worksheet(
@@ -140,10 +142,10 @@ async def tool_get_worksheet(
     name="gsheets_create_worksheet",
     annotations=ToolAnnotations(
         title="创建工作表",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_create_worksheet(
@@ -164,10 +166,10 @@ async def tool_create_worksheet(
     name="gsheets_delete_worksheet",
     annotations=ToolAnnotations(
         title="删除工作表",
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_delete_worksheet(
@@ -184,10 +186,10 @@ async def tool_delete_worksheet(
     name="gsheets_duplicate_worksheet",
     annotations=ToolAnnotations(
         title="复制工作表",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_duplicate_worksheet(
@@ -214,10 +216,10 @@ async def tool_duplicate_worksheet(
     name="gsheets_update_data",
     annotations=ToolAnnotations(
         title="更新工作表数据",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_update_data(
@@ -241,10 +243,10 @@ async def tool_update_data(
     name="gsheets_batch_update_data",
     annotations=ToolAnnotations(
         title="批量写入数据",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_batch_update_data(
@@ -272,10 +274,10 @@ async def tool_batch_update_data(
     name="gsheets_batch_clear",
     annotations=ToolAnnotations(
         title="批量清除区域",
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_batch_clear(
@@ -295,10 +297,10 @@ async def tool_batch_clear(
     name="gsheets_visualization_query",
     annotations=ToolAnnotations(
         title="SQL 查询数据",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_visualization_query(
@@ -335,10 +337,10 @@ async def tool_visualization_query(
     name="gsheets_set_basic_filter",
     annotations=ToolAnnotations(
         title="设置筛选器",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_set_basic_filter(
@@ -366,10 +368,10 @@ async def tool_set_basic_filter(
     name="gsheets_set_data_validation",
     annotations=ToolAnnotations(
         title="设置下拉列表",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_set_data_validation(
@@ -397,10 +399,10 @@ async def tool_set_data_validation(
     name="gsheets_set_row_height",
     annotations=ToolAnnotations(
         title="设置行高",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_set_row_height(
@@ -429,10 +431,10 @@ async def tool_set_row_height(
     name="gsheets_get_tables",
     annotations=ToolAnnotations(
         title="获取表格列表",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_get_tables(
@@ -449,10 +451,10 @@ async def tool_get_tables(
     name="gsheets_create_table",
     annotations=ToolAnnotations(
         title="创建表格",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_create_table(
@@ -470,10 +472,10 @@ async def tool_create_table(
     name="gsheets_delete_table",
     annotations=ToolAnnotations(
         title="删除表格",
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_delete_table(
@@ -493,10 +495,10 @@ async def tool_delete_table(
     name="gsheets_delete_table_by_name",
     annotations=ToolAnnotations(
         title="按名称删除表格",
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_delete_table_by_name(
@@ -521,10 +523,10 @@ async def tool_delete_table_by_name(
     name="gsheets_filter_columns",
     annotations=ToolAnnotations(
         title="过滤工作表列",
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_filter_columns(
@@ -548,10 +550,10 @@ async def tool_filter_columns(
     name="gsheets_set_batch_index",
     annotations=ToolAnnotations(
         title="设置批次索引",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_set_batch_index(
@@ -579,10 +581,10 @@ async def tool_set_batch_index(
     name="gsheets_set_header_list",
     annotations=ToolAnnotations(
         title="写入新表头",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_set_header_list(
@@ -611,10 +613,10 @@ async def tool_set_header_list(
     name="gsheets_get_column_last_value",
     annotations=ToolAnnotations(
         title="获取列最后一个值",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_get_column_last_value(
@@ -638,10 +640,10 @@ async def tool_get_column_last_value(
     name="gsheets_get_rows_by_batch",
     annotations=ToolAnnotations(
         title="按批次读取行",
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def tool_get_rows_by_batch(
@@ -667,10 +669,10 @@ async def tool_get_rows_by_batch(
     name="gsheets_batch_update",
     annotations=ToolAnnotations(
         title="批量更新行数据",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_batch_update(
@@ -702,10 +704,10 @@ async def tool_batch_update(
     name="gsheets_batch_append",
     annotations=ToolAnnotations(
         title="批量追加行数据",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_batch_append(
@@ -738,10 +740,10 @@ async def tool_batch_append(
     name="gsheets_sync_from_file",
     annotations=ToolAnnotations(
         title="从 CSV 文件同步数据",
-        readOnlyHint=False,
-        destructiveHint=False,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_sync_from_file(
@@ -767,10 +769,10 @@ async def tool_sync_from_file(
     name="gsheets_clear_sheet_content",
     annotations=ToolAnnotations(
         title="清空工作表内容（不移除行）",
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_clear_sheet_content(
@@ -799,10 +801,10 @@ async def tool_clear_sheet_content(
     name="gsheets_clear_sheet",
     annotations=ToolAnnotations(
         title="清空工作表数据（删除行）",
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def tool_clear_sheet(
@@ -825,8 +827,11 @@ async def tool_clear_sheet(
 def main() -> None:
     transport = os.getenv("MCP_TRANSPORT", "stdio")
     if transport == "streamable-http":
-        mcp.settings.port = int(os.getenv("MCP_PORT", "8000"))
-        mcp.run(transport="streamable-http")
+        mcp.run(
+            transport="streamable-http",
+            host=os.getenv("MCP_HOST", "127.0.0.1"),
+            port=int(os.getenv("MCP_PORT", "8000")),
+        )
     else:
         mcp.run()
 

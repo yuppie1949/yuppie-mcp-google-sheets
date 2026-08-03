@@ -5,7 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import os
-from typing import Any, Optional, Protocol
+from typing import Any, Optional, Protocol, cast
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -22,6 +22,28 @@ class _GoogleProtocol(Protocol):
     def _get_credentials_info(self) -> dict[str, Any]: ...
     def _get_gspread_client(self) -> gspread.Client: ...
     def _get_spreadsheet(self, spreadsheet_id: str) -> gspread.Spreadsheet: ...
+    def _index_to_letter(self, index: int) -> str: ...
+    def _format_error(self, exception: Exception) -> dict[str, Any]: ...
+    def _read_headers(self, spreadsheet_id: str, sheet_id: str, data_start: int) -> list[str]: ...
+    def _resolve_col_letter(
+        self, spreadsheet_id: str, sheet_id: str, column_name: str, data_start: int
+    ) -> str: ...
+    def _ensure_column(
+        self, spreadsheet_id: str, sheet_id: str, column_name: str, data_start: int
+    ) -> str: ...
+    def _get_drive_service(self) -> Any: ...
+    def get_tables(self, spreadsheet_id: str, sheet_name: str) -> dict[str, Any]: ...
+    def quick_sheets_batch_append(
+        self,
+        spreadsheet_id: str,
+        sheet_id: str,
+        data: list[dict[str, Any]],
+        *,
+        batch_size: int = 500,
+        batch_interval: int = 2,
+        data_start: int = 2,
+        overwrite_start: int | bool | None = None,
+    ) -> None: ...
 
 
 class _GoogleBase:
@@ -36,12 +58,12 @@ class _GoogleBase:
         if not self._credentials_b64:
             raise ValueError("GOOGLE_CREDENTIALS_B64 环境变量未设置")
         raw = base64.b64decode(self._credentials_b64).decode("utf-8")
-        return json.loads(raw)
+        return cast(dict[str, Any], json.loads(raw))
 
     def _get_gspread_client(self) -> gspread.Client:
         """懒加载 gspread http client"""
         if self._gspread is None:
-            creds = Credentials.from_service_account_info(
+            creds = Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
                 self._get_credentials_info(), scopes=SCOPES
             )
             self._gspread = gspread.authorize(creds)

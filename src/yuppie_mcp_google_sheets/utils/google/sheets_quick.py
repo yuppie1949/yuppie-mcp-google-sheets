@@ -347,7 +347,7 @@ class QuickSheetsMixin:
 
         ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
         if overwrite_start is not None:
-            start_row = data_start if overwrite_start is True else overwrite_start  # type: ignore[comparison-overlap]
+            start_row = data_start if overwrite_start is True else overwrite_start
             col_count = len(headers)
             end_col = self._index_to_letter(col_count - 1)
             for i in range(0, len(values), batch_size):

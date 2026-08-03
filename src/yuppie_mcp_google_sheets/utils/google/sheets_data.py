@@ -5,6 +5,8 @@ from __future__ import annotations
 import time
 from typing import Any
 
+from gspread.utils import ValueInputOption
+
 from .base import _GoogleProtocol
 
 
@@ -17,7 +19,7 @@ class DataMixin:
         sheet_name: str,
         data: list[list[Any]],
         range_name: str | None = None,
-        value_input_option: str = "USER_ENTERED",
+        value_input_option: ValueInputOption = ValueInputOption.user_entered,
     ) -> dict[str, Any]:
         """更新工作表数据"""
         try:
@@ -34,7 +36,7 @@ class DataMixin:
         data: list[list[Any]],
         data_start: int = 2,
         chunk_size: int = 5000,
-        value_input_option: str = "USER_ENTERED",
+        value_input_option: ValueInputOption = ValueInputOption.user_entered,
         sleep_interval: float = 1.0,
     ) -> dict[str, Any]:
         """批量分块写入数据"""

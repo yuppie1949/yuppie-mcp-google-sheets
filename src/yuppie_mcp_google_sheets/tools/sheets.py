@@ -319,9 +319,7 @@ async def visualization_query(args: VisualizationQueryInput) -> str:
     keys = [c["label"] for c in cols]
     header = "| " + " | ".join(keys) + " |"
     sep = "| " + " | ".join("---" for _ in keys) + " |"
-    body = "\n".join(
-        "| " + " | ".join(str(r.get(k, "")) for k in keys) + " |" for r in rows
-    )
+    body = "\n".join("| " + " | ".join(str(r.get(k, "")) for k in keys) + " |" for r in rows)
     return f"查询完成，共 {len(rows)} 行\n\n{header}\n{sep}\n{body}"
 
 

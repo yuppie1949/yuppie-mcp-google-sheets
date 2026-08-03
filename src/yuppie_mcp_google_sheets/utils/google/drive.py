@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import requests
 from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build  # type: ignore[import-untyped]
 
 from .base import SCOPES, _GoogleProtocol
 
@@ -19,8 +19,10 @@ if TYPE_CHECKING:
 class DriveMixin:
     """Google Drive 操作方法（混入 _GoogleBase 子类使用）"""
 
-    def _get_drive_service(self: _GoogleProtocol):
-        creds = Credentials.from_service_account_info(self._get_credentials_info(), scopes=SCOPES)
+    def _get_drive_service(self: _GoogleProtocol) -> Any:
+        creds = Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
+            self._get_credentials_info(), scopes=SCOPES
+        )
         return build("drive", "v3", credentials=creds)
 
     def list_files(

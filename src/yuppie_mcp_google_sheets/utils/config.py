@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -15,13 +16,13 @@ class GoogleConfig:
     """运行配置：Google 服务账号凭据"""
 
     credentials_b64: str
-    _credentials_info: dict | None = None
+    _credentials_info: dict[str, Any] | None = None
 
     def __init__(self, credentials_b64: str) -> None:
         self.credentials_b64 = credentials_b64.strip()
 
     @property
-    def credentials_info(self) -> dict:
+    def credentials_info(self) -> dict[str, Any]:
         """解析并缓存凭据 JSON"""
         if self._credentials_info is None:
             raw = base64.b64decode(self.credentials_b64).decode("utf-8")

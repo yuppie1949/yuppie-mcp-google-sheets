@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlencode
 
 import google.auth.transport.requests
@@ -33,7 +33,9 @@ class VisualizationClient:
         self._creds_info = json.loads(raw)
 
     def _get_access_token(self) -> str:
-        creds = Credentials.from_service_account_info(self._creds_info, scopes=SCOPES)
+        creds = Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
+            self._creds_info, scopes=SCOPES
+        )
         creds.refresh(google.auth.transport.requests.Request())
         return creds.token  # type: ignore[no-any-return]
 
@@ -94,19 +96,20 @@ class VisualizationClient:
 
 def _b64decode(b64: str) -> str:
     import base64
+
     return base64.b64decode(b64).decode("utf-8")
 
 
-def _parse_gviz_response(raw: str) -> dict:
+def _parse_gviz_response(raw: str) -> dict[str, Any]:
     """解析 Google Visualization API 的 JSONP 响应"""
     cleaned = re.sub(r"^/\*.*?\*/", "", raw).strip()
     match = re.match(r"google\.visualization\.Query\.setResponse\((.*)\);?$", cleaned, re.DOTALL)
     if not match:
         raise ValueError(f"无法解析 gviz 响应格式: {cleaned[:200]}")
-    return json.loads(match.group(1))
+    return cast(dict[str, Any], json.loads(match.group(1)))
 
 
-def _transform_table(table: dict) -> tuple[list[dict], list[dict]]:
+def _transform_table(table: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """将 gviz table 转换为标准格式"""
     col_defs = table.get("cols", [])
     cols = [
@@ -132,10 +135,7 @@ def _transform_table(table: dict) -> tuple[list[dict], list[dict]]:
                 if isinstance(value, str) and value.startswith("Date("):
                     m = re.match(r"Date\((\d+),(\d+),(\d+)", value)
                     if m:
-                        value = (
-                            f"{int(m.group(1))}-{int(m.group(2)) + 1:02d}-"
-                            f"{int(m.group(3)):02d}"
-                        )
+                        value = f"{int(m.group(1))}-{int(m.group(2)) + 1:02d}-{int(m.group(3)):02d}"
             row_data[key] = value
         rows.append(row_data)
     return cols, rows
