@@ -42,9 +42,9 @@ def test_get_worksheet_required() -> None:
 
 
 def test_get_worksheet_valid() -> None:
-    args = GetWorksheetInput(spreadsheet_id="sid", sheet_name="Sheet1")
+    args = GetWorksheetInput(spreadsheet_id="sid", sheet_id="123")
     assert args.spreadsheet_id == "sid"
-    assert args.sheet_name == "Sheet1"
+    assert args.sheet_id == "123"
 
 
 def test_create_worksheet_defaults() -> None:
@@ -60,9 +60,9 @@ def test_delete_worksheet_required() -> None:
 
 def test_duplicate_worksheet_valid() -> None:
     args = DuplicateWorksheetInput(
-        spreadsheet_id="sid", source_sheet_name="Src", new_sheet_name="Dst"
+        spreadsheet_id="sid", source_sheet_id="111", new_sheet_name="Dst"
     )
-    assert args.source_sheet_name == "Src"
+    assert args.source_sheet_id == "111"
 
 
 # ── 数据域 ──
@@ -70,14 +70,14 @@ def test_duplicate_worksheet_valid() -> None:
 
 def test_update_data_valid() -> None:
     args = UpdateDataInput(
-        spreadsheet_id="sid", sheet_name="Sheet1", data=[["a", "b"], ["1", "2"]]
+        spreadsheet_id="sid", sheet_id="123", data=[["a", "b"], ["1", "2"]]
     )
     assert len(args.data) == 2
 
 
 def test_batch_update_data_defaults() -> None:
     args = BatchUpdateDataInput(
-        spreadsheet_id="sid", sheet_name="Sheet1", data=[["a"]]
+        spreadsheet_id="sid", sheet_id="123", data=[["a"]]
     )
     assert args.data_start == 2
     assert args.chunk_size == 5000
@@ -85,7 +85,7 @@ def test_batch_update_data_defaults() -> None:
 
 def test_batch_clear_required_ranges() -> None:
     with pytest.raises(ValidationError):
-        BatchClearInput(spreadsheet_id="sid", sheet_name="Sheet1")
+        BatchClearInput(spreadsheet_id="sid", sheet_id="123")
 
 
 def test_visualization_query_required() -> None:
@@ -95,9 +95,9 @@ def test_visualization_query_required() -> None:
 
 def test_visualization_query_valid() -> None:
     args = VisualizationQueryInput(
-        spreadsheet_id="sid", query="SELECT A, B WHERE C > 100"
+        spreadsheet_id="sid", sheet_id="123", query="SELECT A, B WHERE C > 100"
     )
-    assert args.headers == 1
+    assert args.sheet_id == "123"
 
 
 # ── 格式域 ──
@@ -105,7 +105,7 @@ def test_visualization_query_valid() -> None:
 
 def test_set_basic_filter_valid() -> None:
     args = SetBasicFilterInput(
-        spreadsheet_id="sid", sheet_name="Sheet1",
+        spreadsheet_id="sid", sheet_id="123",
         start_row=0, end_row=100, start_col=0, end_col=10,
     )
     assert args.end_row == 100
@@ -113,7 +113,7 @@ def test_set_basic_filter_valid() -> None:
 
 def test_set_data_validation_valid() -> None:
     args = SetDataValidationInput(
-        spreadsheet_id="sid", sheet_name="Sheet1",
+        spreadsheet_id="sid", sheet_id="123",
         column_name="Status", dropdown_options=["Open", "Closed"],
     )
     assert len(args.dropdown_options) == 2
@@ -122,7 +122,7 @@ def test_set_data_validation_valid() -> None:
 
 def test_set_row_height_valid() -> None:
     args = SetRowHeightInput(
-        spreadsheet_id="sid", sheet_name="Sheet1",
+        spreadsheet_id="sid", sheet_id="123",
         data_start=2, height=40,
     )
     assert args.height == 40
@@ -237,4 +237,4 @@ def test_copy_file_valid() -> None:
 
 def test_extra_field_forbidden() -> None:
     with pytest.raises(ValidationError):
-        GetWorksheetInput(spreadsheet_id="sid", sheet_name="Sheet1", extra_field="bad")
+        GetWorksheetInput(spreadsheet_id="sid", sheet_id="123", extra_field="bad")

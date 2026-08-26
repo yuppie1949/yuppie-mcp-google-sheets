@@ -516,7 +516,7 @@ async def tool_delete_table_by_name(
 # 快捷操作工具
 # ═══════════════════════════════════════════
 
-
+# ✅
 @mcp.tool(
     name="gsheets_filter_columns",
     annotations=ToolAnnotations(
