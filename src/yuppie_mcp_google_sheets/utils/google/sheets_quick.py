@@ -17,6 +17,39 @@ if TYPE_CHECKING:
 class QuickSheetsMixin:
     """电子表格批量快捷操作（混入 _GoogleBase 子类使用）"""
 
+    _RETRY_MAX_ATTEMPTS = 5
+    _RETRY_BASE_DELAY = 30.0
+
+    def _find_last_data_row(self: _GoogleProtocol, ws: Any) -> int:
+        """找到工作表首列最后一个非空行号（1-based）"""
+        return len(ws.col_values(1))
+
+    def _update_with_retry(self: _GoogleProtocol, ws: Any, **kwargs: Any) -> None:
+        """执行 ws.update，429 配额超限时指数退避重试"""
+        for attempt in range(1, self._RETRY_MAX_ATTEMPTS + 1):
+            try:
+                ws.update(**kwargs)
+                return
+            except Exception as e:
+                if "429" not in str(e) or attempt == self._RETRY_MAX_ATTEMPTS:
+                    raise
+                delay = self._RETRY_BASE_DELAY * attempt
+                time.sleep(delay)
+
+    def _values_batch_update_with_retry(
+        self: _GoogleProtocol, spreadsheet: Any, body: dict[str, Any]
+    ) -> None:
+        """执行 values.batchUpdate，429 配额超限时指数退避重试"""
+        for attempt in range(1, self._RETRY_MAX_ATTEMPTS + 1):
+            try:
+                spreadsheet.values_batch_update(body)
+                return
+            except Exception as e:
+                if "429" not in str(e) or attempt == self._RETRY_MAX_ATTEMPTS:
+                    raise
+                delay = self._RETRY_BASE_DELAY * attempt
+                time.sleep(delay)
+
     def _read_headers(
         self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str, data_start: int
     ) -> list[str]:
@@ -137,16 +170,20 @@ class QuickSheetsMixin:
         if not rows_to_write:
             return
 
-        requests_list: list[dict[str, Any]] = []
-        for batch_val, group in groupby(rows_to_write, key=lambda x: x[1]):
-            gl = list(group)
-            rng = f"{sheet_id}!{col_letter}{gl[0][0]}:{col_letter}{gl[-1][0]}"
-            vals = [[str(batch_val)] for _ in gl]
-            requests_list.append({"range": rng, "values": vals})
+        # 合并连续行，按块写入（5000 行/块），避免每批次一个请求导致 429
+        first = rows_to_write[0][0]
+        last = rows_to_write[-1][0]
+        values: list[list[str]] = [[""] for _ in range(first, last + 1)]
+        for row_num, batch_val in rows_to_write:
+            values[row_num - first] = [str(batch_val)]
 
         ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
-        for item in requests_list:
-            ws.update(values=item["values"], range_name=item["range"])
+        chunk_size = 50000
+        for i in range(0, len(values), chunk_size):
+            chunk = values[i : i + chunk_size]
+            start_row = first + i
+            rng = f"{col_letter}{start_row}:{col_letter}{start_row + len(chunk) - 1}"
+            self._update_with_retry(ws, values=chunk, range_name=rng)
 
     def quick_sheets_set_header_list(
         self: _GoogleProtocol,
@@ -157,15 +194,18 @@ class QuickSheetsMixin:
         keep_columns: int | None = None,
         data_start: int = 2,
     ) -> None:
-        """从指定位置写入新表头"""
+        """从指定位置写入新表头，超出网格时自动扩列"""
         header_row = data_start - 1
         start_col = keep_columns if keep_columns is not None else 0
         start_letter = self._index_to_letter(start_col)
         end_letter = self._index_to_letter(start_col + len(header_list) - 1)
         ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
+        end_col_index = start_col + len(header_list)
+        if end_col_index > ws.col_count:
+            ws.add_cols(end_col_index - ws.col_count)
         ws.update(
             values=[header_list],
-            range_name=f"{sheet_id}!{start_letter}{header_row}:{end_letter}{header_row}",
+            range_name=f"{start_letter}{header_row}:{end_letter}{header_row}",
         )
 
     def quick_sheets_get_last_value(
@@ -205,7 +245,7 @@ class QuickSheetsMixin:
         end_col = self._index_to_letter(col_count - 1)
         start_row = data_start + (batch_id - 1) * batch_size
         end_row = start_row + batch_size - 1
-        all_data = ws.get(f"{sheet_id}!A{start_row}:{end_col}{end_row}")
+        all_data = ws.get(f"A{start_row}:{end_col}{end_row}")
 
         result: list[dict[str, Any]] = []
         for row_offset, row in enumerate(all_data):
@@ -225,7 +265,50 @@ class QuickSheetsMixin:
         *,
         data_start: int = 2,
     ) -> None:
-        """批量更新多行"""
+        """批量更新多行（不连续列拆成区间，values.batchUpdate 单请求写入）
+
+        Args:
+            spreadsheet_id: 电子表格 ID
+            sheet_id: 工作表 ID（数字 gid）
+            update_data: 每行一个 dict，必须含 row_number（1-based），其余键为列名。
+                列名须与表头一致；不存在的列或缺失的键会被跳过。
+            columns: 要写入的列名列表；不传则从第一条数据的键自动推导（除 row_number 外）。
+            data_start: 表头行 = data_start - 1，默认 2。
+
+        示例（表头为 ['partner id', 'name', 'status']）：
+
+            更新多行，columns 自动推导（只更新每行出现的列）:
+            {
+                "spreadsheet_id": "1BxiMVs0XRA5nFMdKvBk...",
+                "sheet_id": "843703152",
+                "update_data": [
+                    {"row_number": 2, "name": "alice", "status": "done"},
+                    {"row_number": 5, "name": "bob"}
+                ]
+            }
+            → 第 2 行写 B2=alice、C2=done；第 5 行写 B5=bob。
+
+            只更新指定列，忽略数据里的其他键:
+            {
+                "spreadsheet_id": "1BxiMVs0XRA5nFMdKvBk...",
+                "sheet_id": "843703152",
+                "update_data": [
+                    {"row_number": 3, "name": "carol", "status": "ignored"}
+                ],
+                "columns": ["name"]
+            }
+            → 仅 B3=carol，status 不写入。
+
+            同一行更新不连续列（A、C），B 列不受影响:
+            {
+                "spreadsheet_id": "1BxiMVs0XRA5nFMdKvBk...",
+                "sheet_id": "843703152",
+                "update_data": [
+                    {"row_number": 4, "partner id": "p99", "status": "done"}
+                ]
+            }
+            → 拆成 A4 与 C4 两个区间写入。
+        """
         if not update_data:
             return
         if columns is None:
@@ -233,8 +316,13 @@ class QuickSheetsMixin:
 
         headers = self._read_headers(spreadsheet_id, sheet_id, data_start)
         col_indices = {h: i for i, h in enumerate(headers) if h is not None}
-        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
+        spreadsheet = self._get_spreadsheet(spreadsheet_id)
+        ws = spreadsheet.get_worksheet_by_id(sheet_id)
 
+        def letter(i: int) -> str:
+            return self._index_to_letter(i)
+
+        data_values: list[dict[str, Any]] = []
         for row in update_data:
             row_number = row.get("row_number")
             if not row_number:
@@ -244,20 +332,40 @@ class QuickSheetsMixin:
             except (ValueError, TypeError):
                 continue
 
-            cell_updates: list[tuple[str, Any]] = []
-            for col_name in columns:
-                if col_name not in col_indices or col_name not in row:
-                    continue
-                col_letter = self._index_to_letter(col_indices[col_name])
-                cell_updates.append((col_letter, row[col_name]))
-
-            if not cell_updates:
+            # 本行要写的列索引，排序后切连续区间（A、C 不连续 → A、C 两段）
+            col_idx = sorted(
+                col_indices[c] for c in columns if c in col_indices and c in row
+            )
+            if not col_idx:
                 continue
 
-            start_letter = cell_updates[0][0]
-            end_letter = cell_updates[-1][0]
-            range_str = f"{sheet_id}!{start_letter}{row_number}:{end_letter}{row_number}"
-            ws.update(values=[[v for _, v in cell_updates]], range_name=range_str)
+            spans: list[list[int]] = []
+            for i in col_idx:
+                if spans and i == spans[-1][-1] + 1:
+                    spans[-1].append(i)
+                else:
+                    spans.append([i])
+
+            for span in spans:
+                idx_to_col = {col_indices[c]: c for c in columns if c in col_indices and c in row}
+                span_range = (
+                    f"{ws.title}!{letter(span[0])}{row_number}:{letter(span[-1])}{row_number}"
+                )
+                data_values.append(
+                    {"range": span_range, "values": [[row[idx_to_col[i]]] for i in span]}
+                )
+
+        if not data_values:
+            return
+
+        # values.batchUpdate 一次请求写全部区间；区间数过多时分批（每批 500）
+        batch_size = 500
+        for i in range(0, len(data_values), batch_size):
+            chunk = data_values[i : i + batch_size]
+            self._values_batch_update_with_retry(
+                spreadsheet,
+                {"valueInputOption": "USER_ENTERED", "data": chunk},
+            )
 
     def quick_sheets_clear_sheet(
         self: _GoogleProtocol,
@@ -324,7 +432,7 @@ class QuickSheetsMixin:
         for batch_start in range(start, row_count + 1, 5000):
             batch_end = min(batch_start + 5000 - 1, row_count)
             vals = [empty_row] * (batch_end - batch_start + 1)
-            ws.update(values=vals, range_name=f"{sheet_id}!A{batch_start}:{end_col}{batch_end}")
+            ws.update(values=vals, range_name=f"A{batch_start}:{end_col}{batch_end}")
 
         return {"col_count": len(empty_row), "row_count": row_count - start + 1, "start_row": start}
 
@@ -339,33 +447,33 @@ class QuickSheetsMixin:
         data_start: int = 2,
         overwrite_start: int | bool | None = None,
     ) -> None:
-        """批量追加行数据，自动分片并带间隔"""
+        """批量追加行数据，自动分片并带间隔
+
+        overwrite_start:
+            None — 追加：从现有数据末尾之后逐批写入，不覆盖已有数据
+            True — 覆盖：从 data_start 行开始逐批覆盖写
+            int  — 覆盖：从指定行开始逐批覆盖写
+        """
         if not data:
             return
         headers = list(data[0].keys()) if isinstance(data[0], dict) else []
         values: list[list[str]] = [[str(row.get(h, "")) for h in headers] for row in data]
 
         ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
-        if overwrite_start is not None:
-            start_row = data_start if overwrite_start is True else overwrite_start
-            col_count = len(headers)
-            end_col = self._index_to_letter(col_count - 1)
-            for i in range(0, len(values), batch_size):
-                chunk = values[i : i + batch_size]
-                row_start = start_row + i
-                row_end = row_start + len(chunk) - 1
-                ws.update(values=chunk, range_name=f"{sheet_id}!A{row_start}:{end_col}{row_end}")
-                if i + batch_size < len(values) and batch_interval > 0:
-                    time.sleep(batch_interval)
+        end_col = self._index_to_letter(len(headers) - 1)
+        if overwrite_start is None:
+            # 追加：找现有数据最后一行（首列最后一个非空），从下一行开始写
+            start_row = self._find_last_data_row(ws) + 1
         else:
-            for i in range(0, len(values), batch_size):
-                chunk = values[i : i + batch_size]
-                col_count = len(headers)
-                end_col = self._index_to_letter(col_count - 1)
-                # append to end
-                ws.update(values=chunk, range_name=f"{sheet_id}!A{data_start}:{end_col}")
-                if i + batch_size < len(values) and batch_interval > 0:
-                    time.sleep(batch_interval)
+            start_row = data_start if overwrite_start is True else int(overwrite_start)
+
+        for i in range(0, len(values), batch_size):
+            chunk = values[i : i + batch_size]
+            row_start = start_row + i
+            row_end = row_start + len(chunk) - 1
+            ws.update(values=chunk, range_name=f"A{row_start}:{end_col}{row_end}")
+            if i + batch_size < len(values) and batch_interval > 0:
+                time.sleep(batch_interval)
 
     def quick_sheets_sync_from_file(
         self: _GoogleProtocol,

@@ -543,7 +543,7 @@ async def tool_filter_columns(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_set_batch_index",
     annotations=ToolAnnotations(
@@ -574,7 +574,7 @@ async def tool_set_batch_index(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_set_header_list",
     annotations=ToolAnnotations(
@@ -606,7 +606,7 @@ async def tool_set_header_list(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_get_column_last_value",
     annotations=ToolAnnotations(
@@ -633,7 +633,7 @@ async def tool_get_column_last_value(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_get_rows_by_batch",
     annotations=ToolAnnotations(
@@ -662,7 +662,7 @@ async def tool_get_rows_by_batch(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_batch_update",
     annotations=ToolAnnotations(
@@ -697,7 +697,7 @@ async def tool_batch_update(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_batch_append",
     annotations=ToolAnnotations(
