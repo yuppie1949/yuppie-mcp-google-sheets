@@ -352,7 +352,7 @@ class QuickSheetsMixin:
                     f"{ws.title}!{letter(span[0])}{row_number}:{letter(span[-1])}{row_number}"
                 )
                 data_values.append(
-                    {"range": span_range, "values": [[row[idx_to_col[i]]] for i in span]}
+                    {"range": span_range, "values": [[row[idx_to_col[i]] for i in span]]}
                 )
 
         if not data_values:
