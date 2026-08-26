@@ -21,12 +21,12 @@ class QuickSheetsMixin:
         self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str, data_start: int
     ) -> list[str]:
         """读取表头行"""
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         return ws.row_values(data_start - 1)
 
     def _get_col_count(self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str) -> int:
         """获取工作表列数"""
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         return ws.col_count
 
     def _resolve_col_letter(
@@ -56,7 +56,7 @@ class QuickSheetsMixin:
         except ValueError:
             headers = self._read_headers(spreadsheet_id, sheet_id, data_start)
             col_letter = self._index_to_letter(len(headers))
-            ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+            ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
             ws.update(values=[[column_name]], range_name=f"{col_letter}{data_start - 1}")
             return col_letter
 
@@ -93,7 +93,7 @@ class QuickSheetsMixin:
 
         for s, e in reversed(groups):
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
-            ws = spreadsheet.worksheet(sheet_id)
+            ws = spreadsheet.get_worksheet_by_id(sheet_id)
             req = {
                 "deleteDimension": {
                     "range": {
@@ -119,7 +119,7 @@ class QuickSheetsMixin:
     ) -> None:
         """按列设置批次索引"""
         col_letter = self._ensure_column(spreadsheet_id, sheet_id, batch_column, data_start)
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         data = ws.col_values(1)
 
         rows_to_write: list[tuple[int, int]] = []
@@ -144,7 +144,7 @@ class QuickSheetsMixin:
             vals = [[str(batch_val)] for _ in gl]
             requests_list.append({"range": rng, "values": vals})
 
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         for item in requests_list:
             ws.update(values=item["values"], range_name=item["range"])
 
@@ -162,7 +162,7 @@ class QuickSheetsMixin:
         start_col = keep_columns if keep_columns is not None else 0
         start_letter = self._index_to_letter(start_col)
         end_letter = self._index_to_letter(start_col + len(header_list) - 1)
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         ws.update(
             values=[header_list],
             range_name=f"{sheet_id}!{start_letter}{header_row}:{end_letter}{header_row}",
@@ -178,7 +178,7 @@ class QuickSheetsMixin:
     ) -> dict[str, Any]:
         """获取指定列中最后一个非空值和行号"""
         col_letter = self._resolve_col_letter(spreadsheet_id, sheet_id, column_name, data_start)
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         vals = ws.get(f"{col_letter}:{col_letter}")
         for i in range(len(vals) - 1, data_start - 2, -1):
             row = vals[i]
@@ -200,7 +200,7 @@ class QuickSheetsMixin:
         if not headers:
             return []
 
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         col_count = ws.col_count
         end_col = self._index_to_letter(col_count - 1)
         start_row = data_start + (batch_id - 1) * batch_size
@@ -233,7 +233,7 @@ class QuickSheetsMixin:
 
         headers = self._read_headers(spreadsheet_id, sheet_id, data_start)
         col_indices = {h: i for i, h in enumerate(headers) if h is not None}
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
 
         for row in update_data:
             row_number = row.get("row_number")
@@ -268,7 +268,7 @@ class QuickSheetsMixin:
         data_start: int = 2,
     ) -> None:
         """清空工作表（删除行），默认保留首行表头"""
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         row_count = ws.row_count
         start = data_start if keep_header else 1
         if start > row_count:
@@ -298,7 +298,7 @@ class QuickSheetsMixin:
         before_column: str | None = None,
     ) -> dict[str, Any]:
         """清空工作表数据内容（不移除行），默认保留首行表头"""
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         row_count = ws.row_count
         start = data_start if keep_header else 1
         if start > row_count:
@@ -345,7 +345,7 @@ class QuickSheetsMixin:
         headers = list(data[0].keys()) if isinstance(data[0], dict) else []
         values: list[list[str]] = [[str(row.get(h, "")) for h in headers] for row in data]
 
-        ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_id)
+        ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         if overwrite_start is not None:
             start_row = data_start if overwrite_start is True else overwrite_start
             col_count = len(headers)
