@@ -42,19 +42,15 @@ class VisualizationClient:
     def query(
         self,
         spreadsheet_id: str,
+        sheet_id: str,
         query: str,
-        sheet_name: str | None = None,
-        gid: int | None = None,
-        headers: int = 1,
     ) -> dict[str, Any]:
         """通过 Google Visualization API 执行 SQL 风格查询
 
         Args:
             spreadsheet_id: 电子表格 ID
+            sheet_id: 工作表 ID
             query: SQL 查询语句，如 "SELECT A, B WHERE C > 100 ORDER BY A DESC LIMIT 10"
-            sheet_name: 工作表名称（与 gid 二选一）
-            gid: 工作表 ID（与 sheet_name 二选一）
-            headers: 表头行数
 
         Returns:
             { success: bool, data: { cols: [...], rows: [...] } }
@@ -62,11 +58,7 @@ class VisualizationClient:
         try:
             access_token = self._get_access_token()
 
-            params: dict[str, Any] = {"tq": query, "headers": str(headers)}
-            if sheet_name:
-                params["sheet"] = sheet_name
-            elif gid is not None:
-                params["gid"] = str(gid)
+            params: dict[str, Any] = {"tq": query, "gid": sheet_id }
 
             url = (
                 f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/gviz/tq"

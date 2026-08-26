@@ -16,14 +16,14 @@ class DataMixin:
     def update_data(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_name: str,
+        sheet_id: str,
         data: list[list[Any]],
         range_name: str | None = None,
         value_input_option: ValueInputOption = ValueInputOption.user_entered,
     ) -> dict[str, Any]:
         """更新工作表数据"""
         try:
-            ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_name)
+            ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
             ws.update(values=data, range_name=range_name, value_input_option=value_input_option)
             return {"success": True, "data": {"rows": len(data)}}
         except Exception as e:
@@ -32,7 +32,7 @@ class DataMixin:
     def batch_update_data(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_name: str,
+        sheet_id: str,
         data: list[list[Any]],
         data_start: int = 2,
         chunk_size: int = 5000,
@@ -43,7 +43,7 @@ class DataMixin:
         total = len(data)
         chunks = (total + chunk_size - 1) // chunk_size
         try:
-            ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_name)
+            ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
             t0 = time.time()
             for i in range(0, total, chunk_size):
                 chunk = data[i : i + chunk_size]
@@ -63,11 +63,11 @@ class DataMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def batch_clear(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_name: str, ranges: list[str]
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str, ranges: list[str]
     ) -> dict[str, Any]:
         """批量清除工作表区域"""
         try:
-            ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_name)
+            ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
             ws.batch_clear(ranges)
             return {"success": True, "data": {"ranges_cleared": len(ranges)}}
         except Exception as e:

@@ -16,7 +16,7 @@ class FormatMixin:
     def set_basic_filter(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_name: str,
+        sheet_id: str,
         start_row: int,
         end_row: int,
         start_col: int,
@@ -24,7 +24,7 @@ class FormatMixin:
     ) -> dict[str, Any]:
         """设置工作表筛选器"""
         try:
-            ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_name)
+            ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
             req = {
                 "setBasicFilter": {
                     "filter": {
@@ -46,7 +46,7 @@ class FormatMixin:
     def set_data_validation(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_name: str,
+        sheet_id: str,
         column_name: str,
         dropdown_options: list[str],
         data_start: int = 2,
@@ -54,7 +54,7 @@ class FormatMixin:
         """为列设置下拉列表"""
         try:
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
-            ws = spreadsheet.worksheet(sheet_name)
+            ws = spreadsheet.get_worksheet_by_id(sheet_id)
             header_row = data_start - 1
             headers = ws.row_values(header_row)
             try:
@@ -89,14 +89,14 @@ class FormatMixin:
     def set_row_height(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_name: str,
+        sheet_id: str,
         data_start: int,
         height: int,
     ) -> dict[str, Any]:
         """设置工作表行高"""
         try:
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
-            ws = spreadsheet.worksheet(sheet_name)
+            ws = spreadsheet.get_worksheet_by_id(sheet_id)
             req = {
                 "updateDimensionProperties": {
                     "range": {

@@ -215,7 +215,7 @@ async def tool_duplicate_worksheet(
 # 数据操作工具
 # ═══════════════════════════════════════════
 
-
+# ✅
 @mcp.tool(
     name="gsheets_update_data",
     annotations=ToolAnnotations(
@@ -228,7 +228,7 @@ async def tool_duplicate_worksheet(
 )
 async def tool_update_data(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
     data: Annotated[list[list[Any]], Field(description="二维数据列表")],
     range_name: Annotated[str | None, Field(description="更新范围，如 'A1:B10'")] = None,
 ) -> str:
@@ -236,13 +236,13 @@ async def tool_update_data(
     return await sheets.update_data(
         sheets.UpdateDataInput(
             spreadsheet_id=spreadsheet_id,
-            sheet_name=sheet_name,
+            sheet_id=sheet_id,
             data=data,
             range_name=range_name,
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_batch_update_data",
     annotations=ToolAnnotations(
@@ -255,7 +255,7 @@ async def tool_update_data(
 )
 async def tool_batch_update_data(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
     data: Annotated[list[list[Any]], Field(description="二维数据列表")],
     data_start: Annotated[int, Field(description="数据起始行号（1-based），默认 2", ge=1)] = 2,
     chunk_size: Annotated[int, Field(description="每块写入行数，默认 5000", ge=1, le=5000)] = 5000,
@@ -265,7 +265,7 @@ async def tool_batch_update_data(
     return await sheets.batch_update_data(
         sheets.BatchUpdateDataInput(
             spreadsheet_id=spreadsheet_id,
-            sheet_name=sheet_name,
+            sheet_id=sheet_id,
             data=data,
             data_start=data_start,
             chunk_size=chunk_size,
@@ -273,7 +273,7 @@ async def tool_batch_update_data(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_batch_clear",
     annotations=ToolAnnotations(
@@ -286,17 +286,17 @@ async def tool_batch_update_data(
 )
 async def tool_batch_clear(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
     ranges: Annotated[
         list[str], Field(description="范围列表，如 ['A1:B10', 'D1:E20']", min_length=1)
     ],
 ) -> str:
     """批量清除工作表区域。"""
     return await sheets.batch_clear(
-        sheets.BatchClearInput(spreadsheet_id=spreadsheet_id, sheet_name=sheet_name, ranges=ranges)
+        sheets.BatchClearInput(spreadsheet_id=spreadsheet_id, sheet_id=sheet_id, ranges=ranges)
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_visualization_query",
     annotations=ToolAnnotations(
@@ -309,13 +309,11 @@ async def tool_batch_clear(
 )
 async def tool_visualization_query(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表 ID")],
     query: Annotated[
         str,
         Field(description='SQL 查询，如 "SELECT A, B WHERE C > 100 ORDER BY A DESC LIMIT 10"'),
     ],
-    sheet_name: Annotated[str | None, Field(description="工作表名称（与 gid 二选一）")] = None,
-    gid: Annotated[int | None, Field(description="工作表 ID（与 sheet_name 二选一）")] = None,
-    headers: Annotated[int, Field(description="表头行数，默认 1", ge=0)] = 1,
 ) -> str:
     """通过 Google Visualization API 执行 SQL 风格查询。
 
@@ -325,9 +323,7 @@ async def tool_visualization_query(
         sheets.VisualizationQueryInput(
             spreadsheet_id=spreadsheet_id,
             query=query,
-            sheet_name=sheet_name,
-            gid=gid,
-            headers=headers,
+            sheet_id=sheet_id,
         )
     )
 
@@ -336,7 +332,7 @@ async def tool_visualization_query(
 # 格式工具
 # ═══════════════════════════════════════════
 
-
+# ✅
 @mcp.tool(
     name="gsheets_set_basic_filter",
     annotations=ToolAnnotations(
@@ -349,7 +345,7 @@ async def tool_visualization_query(
 )
 async def tool_set_basic_filter(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
     start_row: Annotated[int, Field(description="起始行索引（0-based）", ge=0)],
     end_row: Annotated[int, Field(description="结束行索引", ge=0)],
     start_col: Annotated[int, Field(description="起始列索引（0-based）", ge=0)],
@@ -359,7 +355,7 @@ async def tool_set_basic_filter(
     return await sheets.set_basic_filter(
         sheets.SetBasicFilterInput(
             spreadsheet_id=spreadsheet_id,
-            sheet_name=sheet_name,
+            sheet_id=sheet_id,
             start_row=start_row,
             end_row=end_row,
             start_col=start_col,
@@ -367,7 +363,7 @@ async def tool_set_basic_filter(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_set_data_validation",
     annotations=ToolAnnotations(
@@ -380,7 +376,7 @@ async def tool_set_basic_filter(
 )
 async def tool_set_data_validation(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
     column_name: Annotated[str, Field(description="列名称", min_length=1)],
     dropdown_options: Annotated[list[str], Field(description="下拉选项列表", min_length=1)],
     data_start: Annotated[
@@ -391,14 +387,14 @@ async def tool_set_data_validation(
     return await sheets.set_data_validation(
         sheets.SetDataValidationInput(
             spreadsheet_id=spreadsheet_id,
-            sheet_name=sheet_name,
+            sheet_id=sheet_id,
             column_name=column_name,
             dropdown_options=dropdown_options,
             data_start=data_start,
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_set_row_height",
     annotations=ToolAnnotations(
@@ -411,7 +407,7 @@ async def tool_set_data_validation(
 )
 async def tool_set_row_height(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
     data_start: Annotated[int, Field(description="数据起始行号（1-based）", ge=1)],
     height: Annotated[int, Field(description="行高（像素）", ge=1)],
 ) -> str:
@@ -419,7 +415,7 @@ async def tool_set_row_height(
     return await sheets.set_row_height(
         sheets.SetRowHeightInput(
             spreadsheet_id=spreadsheet_id,
-            sheet_name=sheet_name,
+            sheet_id=sheet_id,
             data_start=data_start,
             height=height,
         )

@@ -68,7 +68,7 @@ class UpdateDataInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
     data: list[list[Any]] = Field(..., description="二维数据列表")
     range_name: str | None = Field(None, description="更新范围，如 'A1:B10'（可选）")
 
@@ -77,7 +77,7 @@ class BatchUpdateDataInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
     data: list[list[Any]] = Field(..., description="二维数据列表")
     data_start: int = Field(2, ge=1, description="数据起始行号（1-based），默认 2")
     chunk_size: int = Field(5000, ge=1, le=5000, description="每块写入行数")
@@ -88,7 +88,7 @@ class BatchClearInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
     ranges: list[str] = Field(..., min_length=1, description="范围列表，如 ['A1:B10', 'D1:E20']")
 
 
@@ -96,17 +96,15 @@ class VisualizationQueryInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
+    sheet_id: str = Field(None, description="工作表 ID")
     query: str = Field(..., min_length=1, description='SQL 查询，如 "SELECT A, B WHERE C > 100"')
-    sheet_name: str | None = Field(None, description="工作表名称（与 gid 二选一）")
-    gid: int | None = Field(None, description="工作表 ID（与 sheet_name 二选一）")
-    headers: int = Field(1, ge=0, description="表头行数")
 
 
 class SetBasicFilterInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
     start_row: int = Field(..., ge=0, description="起始行索引（0-based）")
     end_row: int = Field(..., ge=0, description="结束行索引")
     start_col: int = Field(..., ge=0, description="起始列索引（0-based）")
@@ -117,7 +115,7 @@ class SetDataValidationInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
     column_name: str = Field(..., min_length=1, description="列名称")
     dropdown_options: list[str] = Field(..., min_length=1, description="下拉选项列表")
     data_start: int = Field(2, ge=1, description="数据起始行号，表头=data_start-1，默认 2")
@@ -127,7 +125,7 @@ class SetRowHeightInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
     data_start: int = Field(..., ge=1, description="数据起始行号（1-based）")
     height: int = Field(..., ge=1, description="行高（像素）")
 
@@ -185,7 +183,7 @@ async def get_worksheet(args: GetWorksheetInput) -> str:
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
     d = result["data"]
     return (
-        f"查询完成\n\n"
+        f"执行完毕\n\n"
         f"- **工作表**: `{d['sheet_name']}`\n"
         f"- **工作表id**: `{d['sheet_id']}`\n"
         f"- **行数**: `{d['row_count']}`\n"
@@ -207,7 +205,7 @@ async def create_worksheet(args: CreateWorksheetInput) -> str:
 
     d = result["data"]
     return (
-        f"创建成功\n\n"
+        f"执行完毕\n\n"
         f"- **工作表**: `{d['sheet_name']}`\n"
         f"- **工作表id**: `{d['sheet_id']}`\n"
         f"- **行数**: `{d['row_count']}`\n"
@@ -228,7 +226,7 @@ async def delete_worksheet(args: DeleteWorksheetInput) -> str:
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
     d = result["data"]
     return (
-        f"删除完成\n\n"
+        f"执行完毕\n\n"
         f"- **工作表**: `{d['sheet_name']}`\n"
         f"- **工作表id**: `{d['sheet_id']}`\n"
         f"- **耗时**: `{_elapsed:.1f}s`"
@@ -249,7 +247,7 @@ async def duplicate_worksheet(args: DuplicateWorksheetInput) -> str:
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
     d = result["data"]
     return (
-        f"复制成功\n\n"
+        f"执行完毕\n\n"
         f"- **工作表**: `{d['sheet_name']}`\n"
         f"- **工作表id**: `{d['sheet_id']}`\n"
         f"- **工作表index**: `{d['sheet_index']}`\n"
@@ -265,7 +263,7 @@ async def update_data(args: UpdateDataInput) -> str:
         client = _get_client()
         result = client.update_data(
             args.spreadsheet_id,
-            args.sheet_name,
+            args.sheet_id,
             args.data,
             range_name=args.range_name,
         )
@@ -274,8 +272,13 @@ async def update_data(args: UpdateDataInput) -> str:
         return f"❌ 写入数据失败：{e}"
     if not result.get("success"):
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
-    return f"✅ 写入完成\n\n- **行数**: `{result['data']['rows']}`\n- **耗时**: `{_elapsed:.1f}s`"
-
+    d = result["data"]
+    return (
+        f"执行完毕\n\n"
+        f"- **工作表id**: `{args.sheet_id}`\n"
+        f"- **行数**: `{d['rows']}`\n"
+        f"- **耗时**: `{_elapsed:.1f}s`"
+    )  
 
 async def batch_update_data(args: BatchUpdateDataInput) -> str:
     try:
@@ -283,7 +286,7 @@ async def batch_update_data(args: BatchUpdateDataInput) -> str:
         client = _get_client()
         result = client.batch_update_data(
             args.spreadsheet_id,
-            args.sheet_name,
+            args.sheet_id,
             args.data,
             data_start=args.data_start,
             chunk_size=args.chunk_size,
@@ -296,10 +299,10 @@ async def batch_update_data(args: BatchUpdateDataInput) -> str:
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
     d = result["data"]
     return (
-        f"✅ 批量写入完成\n\n"
+        f"执行完毕\n\n"
         f"- **总行数**: `{d['total_rows']}`\n"
         f"- **总块数**: `{d['total_chunks']}`\n"
-        f"- **耗时**: `{d['elapsed']}s`"
+        f"- **耗时**: `{_elapsed:.1f}s`"
     )
 
 
@@ -307,13 +310,18 @@ async def batch_clear(args: BatchClearInput) -> str:
     try:
         _t0 = time.time()
         client = _get_client()
-        result = client.batch_clear(args.spreadsheet_id, args.sheet_name, args.ranges)
+        result = client.batch_clear(args.spreadsheet_id, args.sheet_id, args.ranges)
         _elapsed = time.time() - _t0
     except Exception as e:
         return f"❌ 批量清除失败：{e}"
     if not result.get("success"):
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
-    return f"✅ 已清除 {result['data']['ranges_cleared']} 个区域\n- **耗时**: `{_elapsed:.1f}s`"
+    d = result["data"]
+    return (
+        f"执行完毕\n\n"
+        f"- **已清除区域**: `{args.ranges}`\n"
+        f"- **耗时**: `{_elapsed:.1f}s`"
+    )
 
 
 async def visualization_query(args: VisualizationQueryInput) -> str:
@@ -322,10 +330,8 @@ async def visualization_query(args: VisualizationQueryInput) -> str:
         client = _get_viz_client()
         result = client.query(
             args.spreadsheet_id,
-            args.query,
-            sheet_name=args.sheet_name,
-            gid=args.gid,
-            headers=args.headers,
+            sheet_id=args.sheet_id,
+            query=args.query,
         )
         _elapsed = time.time() - _t0
     except Exception as e:
@@ -350,7 +356,7 @@ async def set_basic_filter(args: SetBasicFilterInput) -> str:
         client = _get_client()
         result = client.set_basic_filter(
             args.spreadsheet_id,
-            args.sheet_name,
+            args.sheet_id,
             args.start_row,
             args.end_row,
             args.start_col,
@@ -370,7 +376,7 @@ async def set_data_validation(args: SetDataValidationInput) -> str:
         client = _get_client()
         result = client.set_data_validation(
             args.spreadsheet_id,
-            args.sheet_name,
+            args.sheet_id,
             args.column_name,
             args.dropdown_options,
             data_start=args.data_start,
@@ -390,7 +396,7 @@ async def set_row_height(args: SetRowHeightInput) -> str:
     try:
         client = _get_client()
         result = client.set_row_height(
-            args.spreadsheet_id, args.sheet_name, args.data_start, args.height
+            args.spreadsheet_id, args.sheet_id, args.data_start, args.height
         )
     except Exception as e:
         return f"❌ 设置行高失败：{e}"
