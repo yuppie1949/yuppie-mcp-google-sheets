@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 class TableMixin:
     """表格管理方法（混入 _GoogleBase 子类使用）"""
 
-    def get_tables(self: _GoogleProtocol, spreadsheet_id: str, sheet_name: str) -> dict[str, Any]:
+    def get_tables(self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str) -> dict[str, Any]:
         """获取工作表中的所有表格"""
         try:
-            ws = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_name)
+            ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
             meta = self._get_spreadsheet(spreadsheet_id).fetch_sheet_metadata()
             sheet_data = next(
                 (s for s in meta.get("sheets", []) if s["properties"]["sheetId"] == ws.id), None
@@ -27,7 +27,7 @@ class TableMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def delete_table(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_name: str, table_id: int
+        self: _GoogleProtocol, spreadsheet_id: str, table_id: int
     ) -> dict[str, Any]:
         """删除指定表格"""
         try:
@@ -38,11 +38,11 @@ class TableMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def delete_table_by_name(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_name: str, table_name: str
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str, table_name: str
     ) -> dict[str, Any]:
         """按名称删除表格"""
         try:
-            tables_result = self.get_tables(spreadsheet_id, sheet_name)
+            tables_result = self.get_tables(spreadsheet_id, sheet_id)
             if not tables_result["success"]:
                 return tables_result
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
@@ -63,9 +63,33 @@ class TableMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def create_table(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_name: str, table: dict[str, Any]
+        self: _GoogleProtocol, spreadsheet_id: str, table: dict[str, Any]
     ) -> dict[str, Any]:
-        """创建表格"""
+        """创建表格（透传 Google Sheets API addTable 的 Table 对象）
+
+        Args:
+            spreadsheet_id: 电子表格 ID
+            table: Table 对象。columnProperties 项数必须等于列范围宽度，
+                且每项必须显式指定 columnIndex（相对表格的 0-based 索引，省略会报
+                "Duplicate column indexes"）。columnType 可选值：TEXT / DOUBLE /
+                CURRENCY / PERCENT / DATE / TIME / DATE_TIME / BOOLEAN / DROPDOWN 等。
+                不要填 tableId（由 API 自动分配）。已验证示例：
+
+                {
+                    "range": {
+                        "sheetId": 843703152,
+                        "startRowIndex": 0,      # 0-based，首行为表头
+                        "endRowIndex": 11,       # 半开区间：表头 + 10 行数据
+                        "startColumnIndex": 0,
+                        "endColumnIndex": 3      # 3 列 = A/B/C
+                    },
+                    "columnProperties": [
+                        {"columnIndex": 0, "columnName": "姓名", "columnType": "TEXT"},
+                        {"columnIndex": 1, "columnName": "分数", "columnType": "DOUBLE"},
+                        {"columnIndex": 2, "columnName": "日期", "columnType": "DATE"}
+                    ]
+                }
+        """
         try:
             req = {"addTable": {"table": table}}
             self._get_spreadsheet(spreadsheet_id).batch_update({"requests": [req]})

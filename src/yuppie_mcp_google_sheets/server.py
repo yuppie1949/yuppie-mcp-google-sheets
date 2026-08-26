@@ -426,7 +426,7 @@ async def tool_set_row_height(
 # 表格 (Table) 工具
 # ═══════════════════════════════════════════
 
-
+# ✅
 @mcp.tool(
     name="gsheets_get_tables",
     annotations=ToolAnnotations(
@@ -439,14 +439,14 @@ async def tool_set_row_height(
 )
 async def tool_get_tables(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
 ) -> str:
     """获取工作表中的所有表格。"""
     return await sheets.get_tables(
-        sheets.GetTablesInput(spreadsheet_id=spreadsheet_id, sheet_name=sheet_name)
+        sheets.GetTablesInput(spreadsheet_id=spreadsheet_id, sheet_id=sheet_id)
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_create_table",
     annotations=ToolAnnotations(
@@ -459,15 +459,14 @@ async def tool_get_tables(
 )
 async def tool_create_table(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
     table: Annotated[dict[str, Any], Field(description="表格配置")],
 ) -> str:
     """创建表格。"""
     return await sheets.create_table(
-        sheets.CreateTableInput(spreadsheet_id=spreadsheet_id, sheet_name=sheet_name, table=table)
+        sheets.CreateTableInput(spreadsheet_id=spreadsheet_id, table=table)
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_delete_table",
     annotations=ToolAnnotations(
@@ -480,17 +479,16 @@ async def tool_create_table(
 )
 async def tool_delete_table(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
-    table_id: Annotated[int, Field(description="表格 ID")],
+    table_id: Annotated[str, Field(description="表格 ID", min_length=1)],
 ) -> str:
     """删除指定表格。"""
     return await sheets.delete_table(
         sheets.DeleteTableInput(
-            spreadsheet_id=spreadsheet_id, sheet_name=sheet_name, table_id=table_id
+            spreadsheet_id=spreadsheet_id, table_id=table_id
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_delete_table_by_name",
     annotations=ToolAnnotations(
@@ -503,13 +501,13 @@ async def tool_delete_table(
 )
 async def tool_delete_table_by_name(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表 ID", min_length=1)],
     table_name: Annotated[str, Field(description="表格名称", min_length=1)],
 ) -> str:
     """按名称删除表格。"""
     return await sheets.delete_table_by_name(
         sheets.DeleteTableByNameInput(
-            spreadsheet_id=spreadsheet_id, sheet_name=sheet_name, table_name=table_name
+            spreadsheet_id=spreadsheet_id, sheet_id=sheet_id,table_name=table_name
         )
     )
 

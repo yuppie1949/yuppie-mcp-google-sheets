@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 
@@ -141,14 +142,13 @@ class GetTablesInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
 
 
 class CreateTableInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
     table: dict[str, Any] = Field(..., description="表格配置")
 
 
@@ -156,15 +156,14 @@ class DeleteTableInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
-    table_id: int = Field(..., description="表格 ID")
+    table_id: str = Field(..., min_length=1, description="表格 ID")
 
 
 class DeleteTableByNameInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
     table_name: str = Field(..., min_length=1, description="表格名称")
 
 
@@ -423,7 +422,7 @@ async def batch_update_requests(args: BatchUpdateRequestsInput) -> str:
 async def get_tables(args: GetTablesInput) -> str:
     try:
         client = _get_client()
-        result = client.get_tables(args.spreadsheet_id, args.sheet_name)
+        result = client.get_tables(args.spreadsheet_id, args.sheet_id)
     except Exception as e:
         return f"❌ 查询表格失败：{e}"
     if not result.get("success"):
@@ -441,11 +440,10 @@ async def get_tables(args: GetTablesInput) -> str:
         )
     return "\n".join(lines)
 
-
 async def create_table(args: CreateTableInput) -> str:
     try:
         client = _get_client()
-        result = client.create_table(args.spreadsheet_id, args.sheet_name, args.table)
+        result = client.create_table(args.spreadsheet_id, args.table)
     except Exception as e:
         return f"❌ 创建表格失败：{e}"
     return (
@@ -454,11 +452,10 @@ async def create_table(args: CreateTableInput) -> str:
         else f"❌ 失败：{result.get('error', {}).get('msg', '')}"
     )
 
-
 async def delete_table(args: DeleteTableInput) -> str:
     try:
         client = _get_client()
-        result = client.delete_table(args.spreadsheet_id, args.sheet_name, args.table_id)
+        result = client.delete_table(args.spreadsheet_id, args.table_id)
     except Exception as e:
         return f"❌ 删除表格失败：{e}"
     return (
@@ -471,7 +468,7 @@ async def delete_table(args: DeleteTableInput) -> str:
 async def delete_table_by_name(args: DeleteTableByNameInput) -> str:
     try:
         client = _get_client()
-        result = client.delete_table_by_name(args.spreadsheet_id, args.sheet_name, args.table_name)
+        result = client.delete_table_by_name(args.spreadsheet_id, args.sheet_id, args.table_name)
     except Exception as e:
         return f"❌ 删除表格失败：{e}"
     if not result.get("success"):
