@@ -26,7 +26,7 @@ mcp = MCPServer(
 # Drive 工具
 # ═══════════════════════════════════════════
 
-
+# ✅
 @mcp.tool(
     name="gsheets_list_files",
     annotations=ToolAnnotations(
@@ -47,7 +47,7 @@ async def tool_list_files(
     """列出 Google Drive 文件夹中的文件。"""
     return await drive.list_files(drive.ListFilesInput(folder_id=folder_id, file_type=file_type))
 
-
+# ✅
 @mcp.tool(
     name="gsheets_filter_and_sort_files",
     annotations=ToolAnnotations(
@@ -76,7 +76,7 @@ async def tool_filter_and_sort_files(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_get_storage_quota",
     annotations=ToolAnnotations(
@@ -91,7 +91,7 @@ async def tool_get_storage_quota() -> str:
     """查询 Google Drive 存储用量信息。"""
     return await drive.get_storage_quota(drive.GetStorageQuotaInput())
 
-
+# ✅
 @mcp.tool(
     name="gsheets_copy_file",
     annotations=ToolAnnotations(
@@ -117,7 +117,7 @@ async def tool_copy_file(
 # 工作表管理工具
 # ═══════════════════════════════════════════
 
-
+# ✅
 @mcp.tool(
     name="gsheets_get_worksheet",
     annotations=ToolAnnotations(
@@ -130,14 +130,14 @@ async def tool_copy_file(
 )
 async def tool_get_worksheet(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: Annotated[str, Field(description="工作表id", min_length=1)],
 ) -> str:
     """获取指定工作表信息（行数、列数、ID）。"""
     return await sheets.get_worksheet(
-        sheets.GetWorksheetInput(spreadsheet_id=spreadsheet_id, sheet_name=sheet_name)
+        sheets.GetWorksheetInput(spreadsheet_id=spreadsheet_id, sheet_id=sheet_id)
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_create_worksheet",
     annotations=ToolAnnotations(
@@ -161,7 +161,7 @@ async def tool_create_worksheet(
         )
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_delete_worksheet",
     annotations=ToolAnnotations(
@@ -174,14 +174,14 @@ async def tool_create_worksheet(
 )
 async def tool_delete_worksheet(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    sheet_name: Annotated[str, Field(description="工作表名称", min_length=1)],
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
 ) -> str:
     """删除指定工作表。"""
     return await sheets.delete_worksheet(
-        sheets.DeleteWorksheetInput(spreadsheet_id=spreadsheet_id, sheet_name=sheet_name)
+        sheets.DeleteWorksheetInput(spreadsheet_id=spreadsheet_id, sheet_id=sheet_id)
     )
 
-
+# ✅
 @mcp.tool(
     name="gsheets_duplicate_worksheet",
     annotations=ToolAnnotations(
@@ -194,14 +194,18 @@ async def tool_delete_worksheet(
 )
 async def tool_duplicate_worksheet(
     spreadsheet_id: Annotated[str, Field(description="电子表格 ID", min_length=1)],
-    source_sheet_name: Annotated[str, Field(description="源工作表名称", min_length=1)],
-    new_sheet_name: Annotated[str, Field(description="新工作表名称", min_length=1)],
+    source_sheet_id: Annotated[str, Field(description="源工作表id", min_length=1)],
+    insert_sheet_index: Annotated[int | None, Field(description="插入位置")] = None,
+    new_sheet_id: Annotated[str | None, Field(description="新工作表id")] = None,
+    new_sheet_name: Annotated[str | None, Field(description="新工作表标题")] = None,
 ) -> str:
     """复制工作表。"""
     return await sheets.duplicate_worksheet(
         sheets.DuplicateWorksheetInput(
             spreadsheet_id=spreadsheet_id,
-            source_sheet_name=source_sheet_name,
+            source_sheet_id=source_sheet_id,
+            insert_sheet_index=insert_sheet_index,
+            new_sheet_id=new_sheet_id,
             new_sheet_name=new_sheet_name,
         )
     )

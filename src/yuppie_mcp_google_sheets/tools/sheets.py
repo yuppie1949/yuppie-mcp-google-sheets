@@ -35,7 +35,7 @@ class GetWorksheetInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
 
 
 class CreateWorksheetInput(BaseModel):
@@ -51,15 +51,17 @@ class DeleteWorksheetInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    sheet_name: str = Field(..., min_length=1, description="工作表名称")
+    sheet_id: str = Field(..., min_length=1, description="工作表id")
 
 
 class DuplicateWorksheetInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     spreadsheet_id: str = Field(..., min_length=1, description="电子表格 ID")
-    source_sheet_name: str = Field(..., min_length=1, description="源工作表名称")
-    new_sheet_name: str = Field(..., min_length=1, description="新工作表名称")
+    source_sheet_id: str = Field(..., min_length=1, description="源工作表id")
+    insert_sheet_index: int | None = Field(None, description="插入位置")
+    new_sheet_id: str | None = Field(None, description="新工作表id")
+    new_sheet_name: str | None = Field(None, description="新工作表标题")
 
 
 class UpdateDataInput(BaseModel):
@@ -175,7 +177,7 @@ async def get_worksheet(args: GetWorksheetInput) -> str:
     try:
         _t0 = time.time()
         client = _get_client()
-        result = client.get_worksheet(args.spreadsheet_id, args.sheet_name)
+        result = client.get_worksheet(args.spreadsheet_id, args.sheet_id)
         _elapsed = time.time() - _t0
     except Exception as e:
         return f"❌ 获取工作表信息失败：{e}"
@@ -185,6 +187,7 @@ async def get_worksheet(args: GetWorksheetInput) -> str:
     return (
         f"查询完成\n\n"
         f"- **工作表**: `{d['sheet_name']}`\n"
+        f"- **工作表id**: `{d['sheet_id']}`\n"
         f"- **行数**: `{d['row_count']}`\n"
         f"- **列数**: `{d['col_count']}`\n"
         f"- **耗时**: `{_elapsed:.1f}s`"
@@ -201,20 +204,35 @@ async def create_worksheet(args: CreateWorksheetInput) -> str:
         return f"❌ 创建工作表失败：{e}"
     if not result.get("success"):
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
-    return f"✅ 工作表已创建\n\n- **title**: `{args.title}`\n- **耗时**: `{_elapsed:.1f}s`"
+
+    d = result["data"]
+    return (
+        f"创建成功\n\n"
+        f"- **工作表**: `{d['sheet_name']}`\n"
+        f"- **工作表id**: `{d['sheet_id']}`\n"
+        f"- **行数**: `{d['row_count']}`\n"
+        f"- **列数**: `{d['col_count']}`\n"
+        f"- **耗时**: `{_elapsed:.1f}s`"
+    )
 
 
 async def delete_worksheet(args: DeleteWorksheetInput) -> str:
     try:
         _t0 = time.time()
         client = _get_client()
-        result = client.delete_worksheet(args.spreadsheet_id, args.sheet_name)
+        result = client.delete_worksheet(args.spreadsheet_id, args.sheet_id)
         _elapsed = time.time() - _t0
     except Exception as e:
         return f"❌ 删除工作表失败：{e}"
     if not result.get("success"):
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
-    return f"✅ 工作表已删除\n\n- **sheet**: `{args.sheet_name}`\n- **耗时**: `{_elapsed:.1f}s`"
+    d = result["data"]
+    return (
+        f"删除完成\n\n"
+        f"- **工作表**: `{d['sheet_name']}`\n"
+        f"- **工作表id**: `{d['sheet_id']}`\n"
+        f"- **耗时**: `{_elapsed:.1f}s`"
+    )
 
 
 async def duplicate_worksheet(args: DuplicateWorksheetInput) -> str:
@@ -222,19 +240,23 @@ async def duplicate_worksheet(args: DuplicateWorksheetInput) -> str:
         _t0 = time.time()
         client = _get_client()
         result = client.duplicate_worksheet(
-            args.spreadsheet_id, args.source_sheet_name, args.new_sheet_name
+            args.spreadsheet_id, args.source_sheet_id, args.insert_sheet_index, args.new_sheet_id, args.new_sheet_name
         )
         _elapsed = time.time() - _t0
     except Exception as e:
         return f"❌ 复制工作表失败：{e}"
     if not result.get("success"):
         return f"❌ 失败：{result.get('error', {}).get('msg', '未知错误')}"
+    d = result["data"]
     return (
-        f"✅ 工作表已复制\n\n"
-        f"- **源**: `{args.source_sheet_name}`\n"
-        f"- **新表**: `{args.new_sheet_name}`\n"
+        f"复制成功\n\n"
+        f"- **工作表**: `{d['sheet_name']}`\n"
+        f"- **工作表id**: `{d['sheet_id']}`\n"
+        f"- **工作表index**: `{d['sheet_index']}`\n"
+        f"- **行数**: `{d['row_count']}`\n"
+        f"- **列数**: `{d['col_count']}`\n"
         f"- **耗时**: `{_elapsed:.1f}s`"
-    )
+    )    
 
 
 async def update_data(args: UpdateDataInput) -> str:

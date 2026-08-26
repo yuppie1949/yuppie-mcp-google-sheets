@@ -14,15 +14,16 @@ class WorksheetMixin:
     """工作表管理方法（混入 _GoogleBase 子类使用）"""
 
     def get_worksheet(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_name: str
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str
     ) -> dict[str, Any]:
         """获取指定工作表信息"""
         try:
-            worksheet = self._get_spreadsheet(spreadsheet_id).worksheet(sheet_name)
+            worksheet = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
             return {
                 "success": True,
                 "data": {
-                    "sheet_name": sheet_name,
+                    "sheet_name": worksheet.title,
+                    "sheet_id": worksheet.id,
                     "row_count": worksheet.row_count,
                     "col_count": worksheet.col_count,
                     "sheet_id": worksheet.id,
@@ -46,6 +47,7 @@ class WorksheetMixin:
                 "success": True,
                 "data": {
                     "sheet_name": title,
+                    "sheet_id": worksheet.id,
                     "row_count": worksheet.row_count,
                     "col_count": worksheet.col_count,
                 },
@@ -54,33 +56,35 @@ class WorksheetMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def delete_worksheet(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_name: str
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str
     ) -> dict[str, Any]:
         """删除工作表"""
         try:
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
-            worksheet = spreadsheet.worksheet(sheet_name)
+            worksheet = spreadsheet.get_worksheet_by_id(sheet_id)
             spreadsheet.del_worksheet(worksheet)
-            return {"success": True, "data": {"sheet_name": sheet_name}}
+            return {"success": True, "data": {"sheet_name": worksheet.title, "sheet_id": worksheet.id}}
         except Exception as e:
             return {"success": False, "error": self._format_error(e)}
 
     def duplicate_worksheet(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        source_sheet_name: str,
-        new_sheet_name: str,
+        source_sheet_id: str,
+        insert_sheet_index: int | None = None,
+        new_sheet_id: str | None = None,
+        new_sheet_name: str | None = None
     ) -> dict[str, Any]:
         """复制工作表"""
         try:
             spreadsheet = self._get_spreadsheet(spreadsheet_id)
-            source = spreadsheet.worksheet(source_sheet_name)
-            spreadsheet.duplicate_sheet(source.id, new_sheet_name=new_sheet_name)
-            new_ws = spreadsheet.worksheet(new_sheet_name)
+            new_ws = spreadsheet.duplicate_sheet(source_sheet_id, insert_sheet_index, new_sheet_id, new_sheet_name)
             return {
                 "success": True,
                 "data": {
-                    "sheet_name": new_sheet_name,
+                    "sheet_name": new_ws.title,
+                    "sheet_id": new_ws.id,
+                    "sheet_index": new_ws.index,
                     "row_count": new_ws.row_count,
                     "col_count": new_ws.col_count,
                 },
