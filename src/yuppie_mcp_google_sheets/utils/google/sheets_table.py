@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class TableMixin:
     """表格管理方法（混入 _GoogleBase 子类使用）"""
 
-    def get_tables(self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str) -> dict[str, Any]:
+    def get_tables(self: _GoogleProtocol, spreadsheet_id: str, sheet_id: int) -> dict[str, Any]:
         """获取工作表中的所有表格"""
         try:
             ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
@@ -38,7 +38,7 @@ class TableMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def delete_table_by_name(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str, table_name: str
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: int, table_name: str
     ) -> dict[str, Any]:
         """按名称删除表格"""
         try:

@@ -42,7 +42,7 @@ class VisualizationClient:
     def query(
         self,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         query: str,
     ) -> dict[str, Any]:
         """通过 Google Visualization API 执行 SQL 风格查询

@@ -16,7 +16,7 @@ class FormatMixin:
     def set_basic_filter(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         start_row: int,
         end_row: int,
         start_col: int,
@@ -46,7 +46,7 @@ class FormatMixin:
     def set_data_validation(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         column_name: str,
         dropdown_options: list[str],
         data_start: int = 2,
@@ -89,7 +89,7 @@ class FormatMixin:
     def set_row_height(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         data_start: int,
         height: int,
     ) -> dict[str, Any]:

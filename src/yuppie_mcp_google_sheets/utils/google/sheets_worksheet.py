@@ -14,7 +14,7 @@ class WorksheetMixin:
     """工作表管理方法（混入 _GoogleBase 子类使用）"""
 
     def get_worksheet(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: int
     ) -> dict[str, Any]:
         """获取指定工作表信息"""
         try:
@@ -56,7 +56,7 @@ class WorksheetMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def delete_worksheet(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: int
     ) -> dict[str, Any]:
         """删除工作表"""
         try:
@@ -70,9 +70,9 @@ class WorksheetMixin:
     def duplicate_worksheet(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        source_sheet_id: str,
+        source_sheet_id: int,
         insert_sheet_index: int | None = None,
-        new_sheet_id: str | None = None,
+        new_sheet_id: int | None = None,
         new_sheet_name: str | None = None
     ) -> dict[str, Any]:
         """复制工作表"""

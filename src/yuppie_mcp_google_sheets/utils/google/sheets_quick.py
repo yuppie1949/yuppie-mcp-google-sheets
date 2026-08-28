@@ -51,13 +51,13 @@ class QuickSheetsMixin:
                 time.sleep(delay)
 
     def _read_headers(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str, data_start: int
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: int, data_start: int
     ) -> list[str]:
         """读取表头行"""
         ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         return ws.row_values(data_start - 1)
 
-    def _get_col_count(self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str) -> int:
+    def _get_col_count(self: _GoogleProtocol, spreadsheet_id: str, sheet_id: int) -> int:
         """获取工作表列数"""
         ws = self._get_spreadsheet(spreadsheet_id).get_worksheet_by_id(sheet_id)
         return ws.col_count
@@ -65,7 +65,7 @@ class QuickSheetsMixin:
     def _resolve_col_letter(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         column_name: str,
         data_start: int,
     ) -> str:
@@ -79,7 +79,7 @@ class QuickSheetsMixin:
     def _ensure_column(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         column_name: str,
         data_start: int,
     ) -> str:
@@ -96,7 +96,7 @@ class QuickSheetsMixin:
     def quick_sheets_filter_columns(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         keep_columns: list[str],
         *,
         data_start: int = 2,
@@ -144,7 +144,7 @@ class QuickSheetsMixin:
     def quick_sheets_set_batch_index(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         *,
         batch_column: str = "f_batch_index",
         batch_size: int = 10,
@@ -188,7 +188,7 @@ class QuickSheetsMixin:
     def quick_sheets_set_header_list(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         header_list: list[str],
         *,
         keep_columns: int | None = None,
@@ -211,7 +211,7 @@ class QuickSheetsMixin:
     def quick_sheets_get_last_value(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         column_name: str,
         *,
         data_start: int = 2,
@@ -229,7 +229,7 @@ class QuickSheetsMixin:
     def quick_sheets_get_rows_by_batch(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         batch_id: int,
         batch_size: int,
         *,
@@ -259,7 +259,7 @@ class QuickSheetsMixin:
     def quick_sheets_batch_update(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         update_data: list[dict[str, Any]],
         columns: list[str] | None = None,
         *,
@@ -370,7 +370,7 @@ class QuickSheetsMixin:
     def quick_sheets_clear_sheet(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         *,
         keep_header: bool = True,
         data_start: int = 2,
@@ -399,7 +399,7 @@ class QuickSheetsMixin:
     def quick_sheets_clear_sheet_content(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         *,
         keep_header: bool = True,
         data_start: int = 2,
@@ -439,7 +439,7 @@ class QuickSheetsMixin:
     def quick_sheets_batch_append(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         data: list[dict[str, Any]],
         *,
         batch_size: int = 500,
@@ -478,7 +478,7 @@ class QuickSheetsMixin:
     def quick_sheets_sync_from_file(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         file_path: str,
         *,
         batch_size: int = 5000,

@@ -16,7 +16,7 @@ class DataMixin:
     def update_data(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         data: list[list[Any]],
         range_name: str | None = None,
         value_input_option: ValueInputOption = ValueInputOption.user_entered,
@@ -32,7 +32,7 @@ class DataMixin:
     def batch_update_data(
         self: _GoogleProtocol,
         spreadsheet_id: str,
-        sheet_id: str,
+        sheet_id: int,
         data: list[list[Any]],
         data_start: int = 2,
         chunk_size: int = 5000,
@@ -63,7 +63,7 @@ class DataMixin:
             return {"success": False, "error": self._format_error(e)}
 
     def batch_clear(
-        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: str, ranges: list[str]
+        self: _GoogleProtocol, spreadsheet_id: str, sheet_id: int, ranges: list[str]
     ) -> dict[str, Any]:
         """批量清除工作表区域"""
         try:
