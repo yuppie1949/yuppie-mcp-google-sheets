@@ -16,8 +16,8 @@ Google Sheets MCP Server — 让 AI 助手通过 MCP 协议操作 Google Sheets 
 ```bash
 uv add "yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git#subdirectory=packages/yuppie-google-sheets"
 
-# 或 requirements.txt（锁定 tag）
-yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git@v0.3.0#subdirectory=packages/yuppie-google-sheets
+# 锁定版本（推荐生产环境）：@tag / @分支 / @commit 均可，如
+yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git@v0.3.1#subdirectory=packages/yuppie-google-sheets
 ```
 
 ```python

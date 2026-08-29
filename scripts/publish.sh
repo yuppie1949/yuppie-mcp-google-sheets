@@ -69,5 +69,22 @@ echo -e "${GREEN}✓ wheel 已 vendor ${VENDOR_COUNT} 个库文件${NC}"
 echo -e "${GREEN}正在发布到 PyPI...${NC}"
 UV_PUBLISH_TOKEN="$UV_PUBLISH_TOKEN" uv publish "${SHELL_PKG_DIR}/dist/"*
 
+# tag 流程：库包 yuppie-google-sheets 仅 GitHub 分发，用户通过 @tag 锁定版本
+TAG="v${NEW_VERSION}"
+echo -e "${GREEN}正在处理 tag ${TAG} ...${NC}"
+if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+    echo -e "${YELLOW}tag ${TAG} 已存在，跳过${NC}"
+else
+    read -p "创建并推送 tag ${TAG}？(Y/n): " TAG_CONFIRM
+    if [[ ! "$TAG_CONFIRM" =~ ^[Nn]$ ]]; then
+        LIB_VERSION=$(grep '^version = ' "packages/yuppie-google-sheets/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
+        git tag -a "${TAG}" -m "yuppie-mcp-google-sheets ${NEW_VERSION} + yuppie-google-sheets ${LIB_VERSION}"
+        git push origin "${TAG}"
+        echo -e "${GREEN}✓ tag ${TAG} 已推送${NC}"
+    else
+        echo -e "${YELLOW}已跳过 tag（注意：库包用户将无法通过 @${TAG} 锁定本版本）${NC}"
+    fi
+fi
+
 echo -e "${GREEN}=== 发布完成 ===${NC}"
 echo -e "${GREEN}查看: https://pypi.org/project/yuppie-mcp-google-sheets/${NC}"
