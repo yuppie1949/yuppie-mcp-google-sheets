@@ -10,122 +10,141 @@ NC='\033[0m' # No Color
 # 双包结构：库包 yuppie-google-sheets（PyPI）+ 壳包 yuppie-mcp-google-sheets（PyPI，依赖库包）
 LIB_PKG_DIR="packages/yuppie-google-sheets"
 SHELL_PKG_DIR="packages/yuppie-mcp-google-sheets"
+LIB_PYPROJECT="${LIB_PKG_DIR}/pyproject.toml"
+LIB_INIT="${LIB_PKG_DIR}/src/yuppie_google_sheets/__init__.py"
 SHELL_PYPROJECT="${SHELL_PKG_DIR}/pyproject.toml"
 SHELL_INIT="${SHELL_PKG_DIR}/src/yuppie_mcp_google_sheets/__init__.py"
 
 echo -e "${GREEN}=== PyPI 发布脚本（库包 + 壳包）===${NC}"
 
-# ── 运行模式 ──
-read -p "模式：1=正常发布（默认） 2=仅打 tag 不发布: " MODE
-if [ "$MODE" = "2" ]; then
-    MODE="tag-only"
+# ── 选择动作（可多选）──
+echo -e "这次要做什么？（可多选，逗号分隔；回车默认 4=全部）"
+echo -e "  1) 发布壳包 yuppie-mcp-google-sheets"
+echo -e "  2) 发布库包 yuppie-google-sheets"
+echo -e "  3) 仅打 tag v<壳包版本> 并推送"
+echo -e "  4) 全部（发布壳包 + 发布库包 + 打 tag）"
+read -p "选择: " ACTIONS
+if [ -z "$ACTIONS" ] || [ "$ACTIONS" = "4" ]; then
+    DO_SHELL=1; DO_LIB=1; DO_TAG=1
 else
-    MODE="publish"
+    DO_SHELL=0; DO_LIB=0; DO_TAG=0
+    IFS=',' read -ra SEL <<< "$ACTIONS"
+    for a in "${SEL[@]}"; do
+        case "$a" in
+            1) DO_SHELL=1 ;;
+            2) DO_LIB=1 ;;
+            3) DO_TAG=1 ;;
+            *) echo -e "${RED}未知选项: $a${NC}"; exit 1 ;;
+        esac
+    done
 fi
 
-# 检查 token（仅发布模式需要）
-if [ "$MODE" = "publish" ] && [ -z "$UV_PUBLISH_TOKEN" ]; then
+if [ "$DO_SHELL" = "0" ] && [ "$DO_LIB" = "0" ] && [ "$DO_TAG" = "0" ]; then
+    echo -e "${RED}未选择任何动作${NC}"; exit 1
+fi
+
+# 检查 token（有发布动作就需要）
+if { [ "$DO_SHELL" = "1" ] || [ "$DO_LIB" = "1" ]; } && [ -z "$UV_PUBLISH_TOKEN" ]; then
     echo -e "${RED}错误: 未设置 UV_PUBLISH_TOKEN 环境变量${NC}"
     echo "请设置 PyPI API Token:"
     echo "  export UV_PUBLISH_TOKEN='pypi-你的token'"
     exit 1
 fi
 
-# ── 壳包版本 ──
-CURRENT_VERSION=$(grep '^version = ' "${SHELL_PYPROJECT}" | sed 's/version = "\(.*\)"/\1/')
-echo -e "${YELLOW}壳包当前版本: ${CURRENT_VERSION}${NC}"
-read -p "壳包新版本号 (当前: ${CURRENT_VERSION}): " NEW_VERSION
-if [ -z "$NEW_VERSION" ]; then
-    NEW_VERSION=$CURRENT_VERSION
-    echo -e "${YELLOW}壳包使用当前版本: ${NEW_VERSION}${NC}"
+# ── 版本输入（只问选中的包）──
+CURRENT_SHELL=$(grep '^version = ' "${SHELL_PYPROJECT}" | sed 's/version = "\(.*\)"/\1/')
+CURRENT_LIB=$(grep '^version = ' "${LIB_PYPROJECT}" | sed 's/version = "\(.*\)"/\1/')
+NEW_SHELL="$CURRENT_SHELL"
+NEW_LIB="$CURRENT_LIB"
+
+if [ "$DO_SHELL" = "1" ]; then
+    read -p "壳包新版本号 (当前: ${CURRENT_SHELL}): " v
+    [ -n "$v" ] && NEW_SHELL="$v"
+fi
+if [ "$DO_LIB" = "1" ]; then
+    read -p "库包新版本号 (当前: ${CURRENT_LIB}): " v
+    [ -n "$v" ] && NEW_LIB="$v"
+fi
+if [ "$DO_TAG" = "1" ] && [ "$DO_SHELL" = "0" ]; then
+    read -p "tag 版本号 v<版本> (壳包当前: ${CURRENT_SHELL}): " v
+    [ -n "$v" ] && NEW_SHELL="$v"
 fi
 
-# ── 库包版本 ──
-LIB_VERSION=$(grep '^version = ' "${LIB_PKG_DIR}/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
-PUBLISH_LIB=0
-if [ "$MODE" = "publish" ]; then
-    read -p "库包是否也要发版？(当前: ${LIB_VERSION}) 输入新版本号直接发布，回车跳过: " NEW_LIB_VERSION
-    if [ -n "$NEW_LIB_VERSION" ] && [ "$NEW_LIB_VERSION" != "$LIB_VERSION" ]; then
-        PUBLISH_LIB=1
-        sed -i '' "s/^version = .*/version = \"${NEW_LIB_VERSION}\"/" "${LIB_PKG_DIR}/pyproject.toml"
-        sed -i '' "s/__version__ = .*/__version__ = \"${NEW_LIB_VERSION}\"/" "${LIB_PKG_DIR}/src/yuppie_google_sheets/__init__.py"
-        LIB_VERSION="${NEW_LIB_VERSION}"
-    elif [ -n "$NEW_LIB_VERSION" ] && [ "$NEW_LIB_VERSION" = "$LIB_VERSION" ]; then
-        PUBLISH_LIB=1  # 版本未变但要求重发（一般会 403，PyPI 不允许覆盖）
-    fi
-fi
-
-# ── 壳包版本号更新 + 提交 ──
-sed -i '' "s/^version = .*/version = \"${NEW_VERSION}\"/" "${SHELL_PYPROJECT}"
-sed -i '' "s/__version__ = .*/__version__ = \"${NEW_VERSION}\"/" "${SHELL_INIT}"
-
-# 提交版本 bump（tag 必须指向包含该版本号的提交）
-git add "${SHELL_PYPROJECT}" "${SHELL_INIT}" "${LIB_PKG_DIR}/pyproject.toml" "${LIB_PKG_DIR}/src/yuppie_google_sheets/__init__.py"
-if ! git diff --cached --quiet; then
-    git commit -q -m "chore: bump 版本（壳包 ${NEW_VERSION} + 库包 ${LIB_VERSION}）"
-    echo -e "${GREEN}✓ 版本 bump 已提交${NC}"
-fi
-
-# ── tag-only 模式：直接跳到打 tag ──
-if [ "$MODE" = "tag-only" ]; then
-    echo -e "${YELLOW}仅打 tag 模式：跳过构建与 PyPI 发布${NC}"
-    TAG="v${NEW_VERSION}"
-    if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-        echo -e "${YELLOW}tag ${TAG} 已存在，无事可做${NC}"
-        exit 0
-    fi
-    read -p "创建并推送 tag ${TAG}（壳包 ${NEW_VERSION} + 库包 ${LIB_VERSION}）? (Y/n): " TAG_CONFIRM
-    if [[ ! "$TAG_CONFIRM" =~ ^[Nn]$ ]]; then
-        git tag -a "${TAG}" -m "yuppie-mcp-google-sheets ${NEW_VERSION} + yuppie-google-sheets ${LIB_VERSION}"
-        git push origin "${TAG}"
-        echo -e "${GREEN}✓ tag ${TAG} 已推送${NC}"
-    else
-        echo -e "${YELLOW}已取消${NC}"
-        exit 1
-    fi
-    exit 0
-fi
-
-# ── 确认发布 ──
-echo -e "${YELLOW}即将发布到 PyPI:${NC}"
-[ "$PUBLISH_LIB" = "1" ] && echo "  库包: yuppie-google-sheets ${LIB_VERSION}"
-echo "  壳包: yuppie-mcp-google-sheets ${NEW_VERSION}"
-read -p "确认发布? (y/N): " CONFIRM
+# ── 确认 ──
+echo -e "${YELLOW}即将执行:${NC}"
+[ "$DO_SHELL" = "1" ] && echo "  发布壳包 yuppie-mcp-google-sheets ${NEW_SHELL}"
+[ "$DO_LIB" = "1" ] && echo "  发布库包 yuppie-google-sheets ${NEW_LIB}"
+[ "$DO_TAG" = "1" ] && echo "  打 tag v${NEW_SHELL}"
+read -p "确认? (y/N): " CONFIRM
 if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
-    echo -e "${RED}发布已取消${NC}"
+    echo -e "${RED}已取消${NC}"
     exit 1
 fi
 
-# ── 构建：库包先发（壳包依赖它）──
+# ── 版本 bump + 提交（确认后才改，取消不产生任何改动）──
+[ "$DO_SHELL" = "1" ] && [ "$NEW_SHELL" != "$CURRENT_SHELL" ] && {
+    sed -i '' "s/^version = .*/version = \"${NEW_SHELL}\"/" "${SHELL_PYPROJECT}"
+    sed -i '' "s/__version__ = .*/__version__ = \"${NEW_SHELL}\"/" "${SHELL_INIT}"
+}
+[ "$DO_LIB" = "1" ] && [ "$NEW_LIB" != "$CURRENT_LIB" ] && {
+    sed -i '' "s/^version = .*/version = \"${NEW_LIB}\"/" "${LIB_PYPROJECT}"
+    sed -i '' "s/__version__ = .*/__version__ = \"${NEW_LIB}\"/" "${LIB_INIT}"
+}
+git add "${SHELL_PYPROJECT}" "${SHELL_INIT}" "${LIB_PYPROJECT}" "${LIB_INIT}"
+if ! git diff --cached --quiet; then
+    git commit -q -m "chore: bump 版本（壳包 ${NEW_SHELL} + 库包 ${NEW_LIB}）"
+    echo -e "${GREEN}✓ 版本 bump 已提交${NC}"
+fi
+
+# 发布保护：选中的包版本不得与已发布的重复（PyPI 会 403）
+if [ "$DO_SHELL" = "1" ]; then
+    if curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/yuppie-mcp-google-sheets/${NEW_SHELL}/json" | grep -q 200; then
+        echo -e "${RED}错误: 壳包 ${NEW_SHELL} 已发布到 PyPI，无法重复发布${NC}"
+        git restore --staged --worktree "${SHELL_PYPROJECT}" "${SHELL_INIT}" 2>/dev/null
+        exit 1
+    fi
+fi
+if [ "$DO_LIB" = "1" ]; then
+    if curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/yuppie-google-sheets/${NEW_LIB}/json" | grep -q 200; then
+        echo -e "${RED}错误: 库包 ${NEW_LIB} 已发布到 PyPI，无法重复发布${NC}"
+        git restore --staged --worktree "${LIB_PYPROJECT}" "${LIB_INIT}" 2>/dev/null
+        exit 1
+    fi
+fi
+
+# ── 构建 + 发布：库包先发（壳包依赖它）──
 rm -rf dist/
-if [ "$PUBLISH_LIB" = "1" ]; then
+if [ "$DO_LIB" = "1" ]; then
     echo -e "${GREEN}构建库包...${NC}"
     uv build "${LIB_PKG_DIR}"
     echo -e "${GREEN}发布库包...${NC}"
     UV_PUBLISH_TOKEN="$UV_PUBLISH_TOKEN" uv publish dist/yuppie_google_sheets-*
 fi
+if [ "$DO_SHELL" = "1" ]; then
+    echo -e "${GREEN}构建壳包...${NC}"
+    uv build "${SHELL_PKG_DIR}"
+    echo -e "${GREEN}发布壳包...${NC}"
+    UV_PUBLISH_TOKEN="$UV_PUBLISH_TOKEN" uv publish dist/yuppie_mcp_google_sheets-*
+fi
 
-echo -e "${GREEN}构建壳包...${NC}"
-uv build "${SHELL_PKG_DIR}"
-echo -e "${GREEN}发布壳包...${NC}"
-UV_PUBLISH_TOKEN="$UV_PUBLISH_TOKEN" uv publish dist/yuppie_mcp_google_sheets-*
-
-# ── tag：单一序列，与壳包版本对齐 ──
-TAG="v${NEW_VERSION}"
-echo -e "${GREEN}正在处理 tag ${TAG} ...${NC}"
-if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-    echo -e "${YELLOW}tag ${TAG} 已存在，跳过${NC}"
-else
-    read -p "创建并推送 tag ${TAG}？(Y/n): " TAG_CONFIRM
-    if [[ ! "$TAG_CONFIRM" =~ ^[Nn]$ ]]; then
-        git tag -a "${TAG}" -m "yuppie-mcp-google-sheets ${NEW_VERSION} + yuppie-google-sheets ${LIB_VERSION}"
-        git push origin "${TAG}"
-        echo -e "${GREEN}✓ tag ${TAG} 已推送${NC}"
+# ── tag（选中时；与壳包版本对齐）──
+if [ "$DO_TAG" = "1" ]; then
+    TAG="v${NEW_SHELL}"
+    echo -e "${GREEN}正在处理 tag ${TAG} ...${NC}"
+    if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+        echo -e "${YELLOW}tag ${TAG} 已存在，跳过${NC}"
     else
-        echo -e "${YELLOW}已跳过 tag${NC}"
+        read -p "创建并推送 tag ${TAG}（壳包 ${NEW_SHELL} + 库包 ${NEW_LIB}）? (Y/n): " TAG_CONFIRM
+        if [[ ! "$TAG_CONFIRM" =~ ^[Nn]$ ]]; then
+            git tag -a "${TAG}" -m "yuppie-mcp-google-sheets ${NEW_SHELL} + yuppie-google-sheets ${NEW_LIB}"
+            git push origin "${TAG}"
+            echo -e "${GREEN}✓ tag ${TAG} 已推送${NC}"
+        else
+            echo -e "${YELLOW}已跳过 tag${NC}"
+        fi
     fi
 fi
 
-echo -e "${GREEN}=== 发布完成 ===${NC}"
-echo -e "${GREEN}  https://pypi.org/project/yuppie-mcp-google-sheets/${NC}"
-echo -e "${GREEN}  https://pypi.org/project/yuppie-google-sheets/${NC}"
+echo -e "${GREEN}=== 完成 ===${NC}"
+[ "$DO_SHELL" = "1" ] && echo -e "${GREEN}  https://pypi.org/project/yuppie-mcp-google-sheets/${NC}"
+[ "$DO_LIB" = "1" ] && echo -e "${GREEN}  https://pypi.org/project/yuppie-google-sheets/${NC}"
