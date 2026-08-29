@@ -15,8 +15,16 @@ SHELL_INIT="${SHELL_PKG_DIR}/src/yuppie_mcp_google_sheets/__init__.py"
 
 echo -e "${GREEN}=== PyPI 发布脚本（库包 + 壳包）===${NC}"
 
-# 检查 token
-if [ -z "$UV_PUBLISH_TOKEN" ]; then
+# ── 运行模式 ──
+read -p "模式：1=正常发布（默认） 2=仅打 tag 不发布: " MODE
+if [ "$MODE" = "2" ]; then
+    MODE="tag-only"
+else
+    MODE="publish"
+fi
+
+# 检查 token（仅发布模式需要）
+if [ "$MODE" = "publish" ] && [ -z "$UV_PUBLISH_TOKEN" ]; then
     echo -e "${RED}错误: 未设置 UV_PUBLISH_TOKEN 环境变量${NC}"
     echo "请设置 PyPI API Token:"
     echo "  export UV_PUBLISH_TOKEN='pypi-你的token'"
@@ -34,15 +42,17 @@ fi
 
 # ── 库包版本 ──
 LIB_VERSION=$(grep '^version = ' "${LIB_PKG_DIR}/pyproject.toml" | sed 's/version = "\(.*\)"/\1/')
-read -p "库包是否也要发版？(当前: ${LIB_VERSION}) 输入新版本号直接发布，回车跳过: " NEW_LIB_VERSION
 PUBLISH_LIB=0
-if [ -n "$NEW_LIB_VERSION" ] && [ "$NEW_LIB_VERSION" != "$LIB_VERSION" ]; then
-    PUBLISH_LIB=1
-    sed -i '' "s/^version = .*/version = \"${NEW_LIB_VERSION}\"/" "${LIB_PKG_DIR}/pyproject.toml"
-    sed -i '' "s/__version__ = .*/__version__ = \"${NEW_LIB_VERSION}\"/" "${LIB_PKG_DIR}/src/yuppie_google_sheets/__init__.py"
-    LIB_VERSION="${NEW_LIB_VERSION}"
-elif [ -n "$NEW_LIB_VERSION" ] && [ "$NEW_LIB_VERSION" = "$LIB_VERSION" ]; then
-    PUBLISH_LIB=1  # 版本未变但要求重发（一般会 403，PyPI 不允许覆盖）
+if [ "$MODE" = "publish" ]; then
+    read -p "库包是否也要发版？(当前: ${LIB_VERSION}) 输入新版本号直接发布，回车跳过: " NEW_LIB_VERSION
+    if [ -n "$NEW_LIB_VERSION" ] && [ "$NEW_LIB_VERSION" != "$LIB_VERSION" ]; then
+        PUBLISH_LIB=1
+        sed -i '' "s/^version = .*/version = \"${NEW_LIB_VERSION}\"/" "${LIB_PKG_DIR}/pyproject.toml"
+        sed -i '' "s/__version__ = .*/__version__ = \"${NEW_LIB_VERSION}\"/" "${LIB_PKG_DIR}/src/yuppie_google_sheets/__init__.py"
+        LIB_VERSION="${NEW_LIB_VERSION}"
+    elif [ -n "$NEW_LIB_VERSION" ] && [ "$NEW_LIB_VERSION" = "$LIB_VERSION" ]; then
+        PUBLISH_LIB=1  # 版本未变但要求重发（一般会 403，PyPI 不允许覆盖）
+    fi
 fi
 
 # ── 壳包版本号更新 + 提交 ──
@@ -54,6 +64,26 @@ git add "${SHELL_PYPROJECT}" "${SHELL_INIT}" "${LIB_PKG_DIR}/pyproject.toml" "${
 if ! git diff --cached --quiet; then
     git commit -q -m "chore: bump 版本（壳包 ${NEW_VERSION} + 库包 ${LIB_VERSION}）"
     echo -e "${GREEN}✓ 版本 bump 已提交${NC}"
+fi
+
+# ── tag-only 模式：直接跳到打 tag ──
+if [ "$MODE" = "tag-only" ]; then
+    echo -e "${YELLOW}仅打 tag 模式：跳过构建与 PyPI 发布${NC}"
+    TAG="v${NEW_VERSION}"
+    if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+        echo -e "${YELLOW}tag ${TAG} 已存在，无事可做${NC}"
+        exit 0
+    fi
+    read -p "创建并推送 tag ${TAG}（壳包 ${NEW_VERSION} + 库包 ${LIB_VERSION}）? (Y/n): " TAG_CONFIRM
+    if [[ ! "$TAG_CONFIRM" =~ ^[Nn]$ ]]; then
+        git tag -a "${TAG}" -m "yuppie-mcp-google-sheets ${NEW_VERSION} + yuppie-google-sheets ${LIB_VERSION}"
+        git push origin "${TAG}"
+        echo -e "${GREEN}✓ tag ${TAG} 已推送${NC}"
+    else
+        echo -e "${YELLOW}已取消${NC}"
+        exit 1
+    fi
+    exit 0
 fi
 
 # ── 确认发布 ──
