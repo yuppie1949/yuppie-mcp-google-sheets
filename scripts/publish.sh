@@ -40,6 +40,11 @@ sed -i '' "s/^version = .*/version = \"${NEW_VERSION}\"/" "${SHELL_PYPROJECT}"
 sed -i '' "s/__version__ = .*/__version__ = \"${NEW_VERSION}\"/" "${SHELL_INIT}"
 echo -e "${GREEN}✓ 版本号已更新为 ${NEW_VERSION}${NC}"
 
+# 提交版本 bump（tag 必须指向包含该版本号的提交，否则 tag 内 pyproject 版本滞后）
+git add "${SHELL_PYPROJECT}" "${SHELL_INIT}"
+git commit -q -m "chore: bump 壳包版本至 ${NEW_VERSION}"
+echo -e "${GREEN}✓ 版本 bump 已提交${NC}"
+
 # 确认发布
 echo -e "${YELLOW}即将发布到 PyPI:${NC}"
 echo "  包名: yuppie-mcp-google-sheets"

@@ -17,10 +17,10 @@ uv pip install "yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-
 
 # 锁定版本（推荐生产环境）— @tag / @分支 / @commit 三种方式
 # requirements.txt 锁 tag
-yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git@v0.3.1#subdirectory=packages/yuppie-google-sheets
+yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git@v0.3.2#subdirectory=packages/yuppie-google-sheets
 ```
 
-> tag 与 PyPI 壳包版本同步（`v<mcp版本>`），如 `v0.3.1` = 壳包 0.3.1 + 库包 0.1.0 时的仓库快照。tag 列表见 [releases](https://github.com/yuppie1949/yuppie-mcp-google-sheets/tags)。
+> tag 与 PyPI 壳包版本同步（`v<mcp版本>`），如 `v0.3.2` = 壳包 0.3.2 + 库包 0.1.0 时的仓库快照。tag 列表见 [releases](https://github.com/yuppie1949/yuppie-mcp-google-sheets/tags)。
 
 ## 快速开始
 
