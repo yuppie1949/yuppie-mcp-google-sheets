@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yuppie-mcp-google-sheets"
-version = "0.3.0"
+version = "0.3.1"
 description = "MCP Server for Google Sheets API"
 readme = "README.md"
 license = "MIT"
@@ -51,7 +51,9 @@ yuppie-mcp-google-sheets = "yuppie_mcp_google_sheets.server:main"
 packages = ["src/yuppie_mcp_google_sheets"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"../yuppie-google-sheets/src/yuppie_google_sheets" = "yuppie_google_sheets"
+# vendor 到私有路径，不占用顶层 yuppie_google_sheets 命名空间：
+# 避免与用户同时安装的库包 yuppie-google-sheets 发生文件级覆盖/卸载互删
+"../yuppie-google-sheets/src/yuppie_google_sheets" = "yuppie_mcp_google_sheets/_vendor/yuppie_google_sheets"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -60,4 +62,4 @@ include = [
 ]
 
 [tool.hatch.build.targets.sdist.force-include]
-"../yuppie-google-sheets/src/yuppie_google_sheets" = "src/_vendored/yuppie_google_sheets"
+"../yuppie-google-sheets/src/yuppie_google_sheets" = "src/yuppie_mcp_google_sheets/_vendor/yuppie_google_sheets"

@@ -1781,7 +1781,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "yuppie-mcp-google-sheets"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "packages/yuppie-mcp-google-sheets" }
 dependencies = [
     { name = "google-api-python-client" },

@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 | 包 | 分发 | 职责 |
 |----|------|------|
 | `packages/yuppie-google-sheets` | 仅 GitHub（`git+...#subdirectory=`） | 纯 Google Sheets/Drive 客户端库，**无 MCP、无 pydantic 依赖**（deps 仅 gspread 系），版本独立演进 |
-| `packages/yuppie-mcp-google-sheets` | PyPI（`uvx yuppie-mcp-google-sheets`） | MCP 壳：server.py 把库 tools 注册为 MCP 工具，构建时 hatch `force-include` vendor 库源码进 wheel |
+| `packages/yuppie-mcp-google-sheets` | PyPI（`uvx yuppie-mcp-google-sheets`） | MCP 壳：server.py 把库 tools 注册为 MCP 工具，构建时 hatch `force-include` vendor 库源码到私有路径 `_vendor/`（避免与真库同环境文件冲突） |
 
 拆分动机：依赖本仓库只想用 Google 客户端代码的用户，不被强制安装 `mcp>=2.0.0,<3.0.0`（与用户自己项目的 MCP 版本冲突）。
 
@@ -52,6 +52,7 @@ cd packages/yuppie-mcp-google-sheets && uvx hatch build
 ### 壳包 `packages/yuppie-mcp-google-sheets/src/yuppie_mcp_google_sheets/`
 
 - **`tools/`**: MCP 工具层（Pydantic BaseModel + async 实现 + markdown 输出），跨包引用库包 `yuppie_google_sheets.config / .google`，模块级 client 单例懒加载
+- **`_vendor/`**: vendor 副本引导 — 壳包 `__init__.py` 调 `mount_if_needed()`：环境有真库（`yuppie-google-sheets`）则用真库，无则把 `_vendor/` 挂 sys.path 用副本（pip._vendor 模式，保证双包共存安全）
 - **`server.py`**: 唯一 import mcp 的文件。FastMCP 注册 28 个工具
 
 ### 客户端懒加载
