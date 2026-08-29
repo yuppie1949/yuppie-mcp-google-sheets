@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "yuppie-mcp-google-sheets"
+version = "0.3.0"
+description = "MCP Server for Google Sheets API"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "yuppie", email = "yidaowanli@gmail.com" }
+]
+keywords = ["mcp", "model-context-protocol", "google-sheets", "gspread"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "mcp>=2.0.0,<3.0.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "gspread>=6.0.0",
+    "google-auth>=2.0.0",
+    "google-api-python-client>=2.0.0",
+    "requests>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yuppie1949/yuppie-mcp-google-sheets"
+Repository = "https://github.com/yuppie1949/yuppie-mcp-google-sheets"
+
+[project.scripts]
+yuppie-mcp-google-sheets = "yuppie_mcp_google_sheets.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/yuppie_mcp_google_sheets"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"../yuppie-google-sheets/src/yuppie_google_sheets" = "yuppie_google_sheets"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/pyproject.toml",
+]
+
+[tool.hatch.build.targets.sdist.force-include]
+"../yuppie-google-sheets/src/yuppie_google_sheets" = "src/_vendored/yuppie_google_sheets"

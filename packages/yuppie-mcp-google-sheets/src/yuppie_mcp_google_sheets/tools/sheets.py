@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import time
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from ..utils.config import GoogleConfig
-from ..utils.google import GoogleSheetsClient
-from ..utils.google.visualization import VisualizationClient
+from yuppie_google_sheets import GoogleSheetsClient
+from yuppie_google_sheets.config import GoogleConfig
+from yuppie_google_sheets.visualization import VisualizationClient
 
 _client: GoogleSheetsClient | None = None
 _viz_client: VisualizationClient | None = None
@@ -253,7 +251,7 @@ async def duplicate_worksheet(args: DuplicateWorksheetInput) -> str:
         f"- **行数**: `{d['row_count']}`\n"
         f"- **列数**: `{d['col_count']}`\n"
         f"- **耗时**: `{_elapsed:.1f}s`"
-    )    
+    )
 
 
 async def update_data(args: UpdateDataInput) -> str:
@@ -277,7 +275,7 @@ async def update_data(args: UpdateDataInput) -> str:
         f"- **工作表id**: `{args.sheet_id}`\n"
         f"- **行数**: `{d['rows']}`\n"
         f"- **耗时**: `{_elapsed:.1f}s`"
-    )  
+    )
 
 async def batch_update_data(args: BatchUpdateDataInput) -> str:
     try:

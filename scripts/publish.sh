@@ -7,7 +7,13 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}=== PyPI 发布脚本 ===${NC}"
+# 双包结构：只发布壳包 yuppie-mcp-google-sheets 到 PyPI
+# 库包 yuppie-google-sheets 仅 GitHub 分发，不发布
+SHELL_PKG_DIR="packages/yuppie-mcp-google-sheets"
+SHELL_PYPROJECT="${SHELL_PKG_DIR}/pyproject.toml"
+SHELL_INIT="${SHELL_PKG_DIR}/src/yuppie_mcp_google_sheets/__init__.py"
+
+echo -e "${GREEN}=== PyPI 发布脚本（壳包 yuppie-mcp-google-sheets）===${NC}"
 
 # 检查 token
 if [ -z "$UV_PUBLISH_TOKEN" ]; then
@@ -18,7 +24,7 @@ if [ -z "$UV_PUBLISH_TOKEN" ]; then
 fi
 
 # 检查版本号
-CURRENT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+CURRENT_VERSION=$(grep '^version = ' "${SHELL_PYPROJECT}" | sed 's/version = "\(.*\)"/\1/')
 echo -e "${YELLOW}当前版本: ${CURRENT_VERSION}${NC}"
 
 # 提示输入新版本
@@ -30,8 +36,8 @@ if [ -z "$NEW_VERSION" ]; then
 fi
 
 # 更新版本号（同步两处）
-sed -i '' "s/^version = .*/version = \"${NEW_VERSION}\"/" pyproject.toml
-sed -i '' "s/__version__ = .*/__version__ = \"${NEW_VERSION}\"/" src/yuppie_mcp_google_sheets/__init__.py
+sed -i '' "s/^version = .*/version = \"${NEW_VERSION}\"/" "${SHELL_PYPROJECT}"
+sed -i '' "s/__version__ = .*/__version__ = \"${NEW_VERSION}\"/" "${SHELL_INIT}"
 echo -e "${GREEN}✓ 版本号已更新为 ${NEW_VERSION}${NC}"
 
 # 确认发布
@@ -45,14 +51,23 @@ if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-# 清理旧构建产物，只发布新版本
-rm -rf dist/
-echo -e "${GREEN}正在构建...${NC}"
-uv build
+# 清理旧构建产物
+rm -rf "${SHELL_PKG_DIR}/dist/"
+echo -e "${GREEN}正在构建（hatch 原地构建，保证 force-include 的 ../ 相对路径有效）...${NC}"
+(cd "${SHELL_PKG_DIR}" && uvx hatch build)
 
-# 发布
+# 校验 wheel 已 vendor 库代码
+WHEEL=$(ls "${SHELL_PKG_DIR}"/dist/yuppie_mcp_google_sheets-*.whl)
+VENDOR_COUNT=$(unzip -l "$WHEEL" | grep -c yuppie_google_sheets || true)
+if [ "$VENDOR_COUNT" -eq 0 ]; then
+    echo -e "${RED}错误: wheel 未包含 vendor 的 yuppie_google_sheets，中止发布${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ wheel 已 vendor ${VENDOR_COUNT} 个库文件${NC}"
+
+# 发布（只发壳包 dist 目录）
 echo -e "${GREEN}正在发布到 PyPI...${NC}"
-UV_PUBLISH_TOKEN="$UV_PUBLISH_TOKEN" uv publish
+UV_PUBLISH_TOKEN="$UV_PUBLISH_TOKEN" uv publish "${SHELL_PKG_DIR}/dist/"*
 
 echo -e "${GREEN}=== 发布完成 ===${NC}"
 echo -e "${GREEN}查看: https://pypi.org/project/yuppie-mcp-google-sheets/${NC}"

@@ -1,8 +1,7 @@
 """GoogleSheetsClient 底层测试（仅测纯函数，不测网络调用）"""
 
 import pytest
-
-from yuppie_mcp_google_sheets.utils.google.base import _GoogleBase
+from yuppie_google_sheets.base import _GoogleBase
 
 
 @pytest.mark.parametrize(
@@ -40,7 +39,7 @@ def test_format_error_generic() -> None:
 
 def test_google_sheets_client_aggregates_all_mixins() -> None:
     """GoogleSheetsClient 实例应具备所有 mixin 方法"""
-    from yuppie_mcp_google_sheets.utils.google import GoogleSheetsClient
+    from yuppie_google_sheets import GoogleSheetsClient
 
     client = GoogleSheetsClient()
     # 工作表域
@@ -74,9 +73,8 @@ def test_google_sheets_client_aggregates_all_mixins() -> None:
 
 def test_visualization_client_import_and_parse() -> None:
     """VisualizationClient 导入和解析纯函数测试"""
-    from yuppie_mcp_google_sheets.utils.google.visualization import (
+    from yuppie_google_sheets.visualization import (
         VisualizationClient,
-        _parse_gviz_response,
         _transform_table,
     )
 

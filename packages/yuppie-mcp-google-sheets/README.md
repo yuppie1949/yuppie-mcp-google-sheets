@@ -2,31 +2,6 @@
 
 Google Sheets MCP Server — 让 AI 助手通过 MCP 协议操作 Google Sheets 电子表格和 Drive 文件。
 
-## 仓库结构（双包）
-
-本仓库是 uv workspace，含两个包：
-
-| 包 | 分发方式 | 用途 |
-|----|---------|------|
-| `packages/yuppie-google-sheets` | 仅 GitHub（`git+...#subdirectory=`），不发 PyPI | 纯 Google Sheets/Drive 客户端库，**无 MCP 依赖** |
-| `packages/yuppie-mcp-google-sheets` | PyPI（`uvx yuppie-mcp-google-sheets`） | MCP 壳，把库的 tools 注册为 MCP 工具，构建时 vendor 库源码 |
-
-只想在 Python 项目里操作 Google Sheets、避免 MCP 版本冲突？直接装库包：
-
-```bash
-uv add "yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git#subdirectory=packages/yuppie-google-sheets"
-
-# 或 requirements.txt（锁定 tag）
-yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git@v0.3.0#subdirectory=packages/yuppie-google-sheets
-```
-
-```python
-from yuppie_google_sheets.config import GoogleConfig
-from yuppie_google_sheets import GoogleSheetsClient
-
-client = GoogleSheetsClient(GoogleConfig.from_env())
-```
-
 ## 特性
 
 - **Drive 文件操作**：列出文件夹文件、按文件名过滤排序、存储用量查询
@@ -36,6 +11,16 @@ client = GoogleSheetsClient(GoogleConfig.from_env())
 - **表格管理**：创建、删除、查询表格（Table）
 - **快捷操作**：列过滤、批次索引、批量更新、批量追加、CSV 同步、按批次读取
 - **鉴权**：基于 Google 服务账号，base64 编码凭据
+
+## 架构说明
+
+本包是 MCP 壳：核心 Google Sheets 客户端代码在库包 `yuppie-google-sheets`（同仓库 `packages/yuppie-google-sheets`，仅 GitHub 分发、无 MCP 依赖）。构建时库源码被 vendor 进本包 wheel，因此 PyPI 安装自包含。
+
+如只需在 Python 项目中操作 Google Sheets（不要 MCP），安装库包：
+
+```bash
+uv pip install "yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git#subdirectory=packages/yuppie-google-sheets"
+```
 
 ## 快速开始
 
@@ -147,7 +132,7 @@ base64 -i your-credentials.json
 ## 测试与调试
 
 ```bash
-uv sync --all-packages --all-extras
+uv pip install -e ".[dev]"
 uv run pytest -v
 ```
 

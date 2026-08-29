@@ -1,80 +1,8 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.uv.workspace]
+members = ["packages/*"]
 
-[project]
-name = "yuppie-mcp-google-sheets"
-version = "0.2.2"
-description = "MCP Server for Google Sheets API"
-readme = "README.md"
-license = "MIT"
-requires-python = ">=3.10"
-authors = [
-    { name = "yuppie", email = "yidaowanli@gmail.com" }
-]
-keywords = ["mcp", "model-context-protocol", "google-sheets", "gspread"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-]
-dependencies = [
-    "mcp>=2.0.0,<3.0.0",
-    "pydantic>=2.0.0",
-    "python-dotenv>=1.0.0",
-    "gspread>=6.0.0",
-    "google-auth>=2.0.0",
-    "google-api-python-client>=2.0.0",
-    "requests>=2.0.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
-    "ruff>=0.4.0",
-    "mypy>=1.10.0",
-]
-
-[project.urls]
-Homepage = "https://github.com/yuppie1949/yuppie-mcp-google-sheets"
-Repository = "https://github.com/yuppie1949/yuppie-mcp-google-sheets"
-
-[project.scripts]
-yuppie-mcp-google-sheets = "yuppie_mcp_google_sheets.server:main"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/yuppie_mcp_google_sheets"]
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "/src",
-    "/README.md",
-    "/LICENSE",
-    "/pyproject.toml",
-]
-exclude = [
-    "/.git",
-    "/.github",
-    "/.venv",
-    "/__pycache__",
-    "/.pytest_cache",
-    "/.mypy_cache",
-    "/.ruff_cache",
-    "/dist",
-    "/build",
-    "/.env",
-    "/.env.example",
-    "/docs",
-    "/tests",
-    "/.neuralmemory",
-    "/scripts",
-    "/.DS_Store",
-]
+[tool.uv.sources]
+yuppie-google-sheets = { workspace = true }
 
 [tool.ruff]
 line-length = 100
@@ -86,6 +14,7 @@ select = ["E", "F", "I", "W"]
 [tool.mypy]
 python_version = "3.10"
 strict = true
+mypy_path = "packages/yuppie-google-sheets/src:packages/yuppie-mcp-google-sheets/src"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

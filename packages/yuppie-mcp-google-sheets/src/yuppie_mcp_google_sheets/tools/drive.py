@@ -6,9 +6,8 @@ import time
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from ..utils.config import GoogleConfig
-from ..utils.google import GoogleSheetsClient
+from yuppie_google_sheets import GoogleSheetsClient
+from yuppie_google_sheets.config import GoogleConfig
 
 _client: GoogleSheetsClient | None = None
 
