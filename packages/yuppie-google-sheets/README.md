@@ -6,21 +6,9 @@ Google Sheets & Drive 客户端库（基于服务账号 + gspread），**无 MCP
 
 ## 安装
 
-本包不发布到 PyPI，从 GitHub 安装（monorepo 子目录）：
-
 ```bash
-# uv（跟踪 main 分支）
-uv add "yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git#subdirectory=packages/yuppie-google-sheets"
-
-# pip / uv pip
-uv pip install "yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git#subdirectory=packages/yuppie-google-sheets"
-
-# 锁定版本（推荐生产环境）— @tag / @分支 / @commit 三种方式
-# requirements.txt 锁 tag
-yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git@v0.3.2#subdirectory=packages/yuppie-google-sheets
+uv add yuppie-google-sheets        # 或 pip install yuppie-google-sheets
 ```
-
-> tag 与 PyPI 壳包版本同步（`v<mcp版本>`），如 `v0.3.2` = 壳包 0.3.2 + 库包 0.1.0 时的仓库快照。tag 列表见 [releases](https://github.com/yuppie1949/yuppie-mcp-google-sheets/tags)。
 
 ## 快速开始
 
@@ -44,7 +32,7 @@ client.update_values(spreadsheet, "Sheet1!A1", [["hello", "world"]])
 
 ## 与 MCP Server 的关系
 
-同一仓库的 `packages/yuppie-mcp-google-sheets` 是本库的 MCP 壳（把 `tools` 注册为 MCP 工具），走 PyPI 分发（`uvx yuppie-mcp-google-sheets`）。两者版本独立演进。
+同一仓库的 `packages/yuppie-mcp-google-sheets` 是本库的 MCP 壳（把 `tools` 注册为 MCP 工具），PyPI 分发（`uvx yuppie-mcp-google-sheets`），依赖本包。两者版本独立演进。
 
 ## 依赖
 

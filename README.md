@@ -8,16 +8,13 @@ Google Sheets MCP Server — 让 AI 助手通过 MCP 协议操作 Google Sheets 
 
 | 包 | 分发方式 | 用途 |
 |----|---------|------|
-| `packages/yuppie-google-sheets` | 仅 GitHub（`git+...#subdirectory=`），不发 PyPI | 纯 Google Sheets/Drive 客户端库，**无 MCP 依赖** |
-| `packages/yuppie-mcp-google-sheets` | PyPI（`uvx yuppie-mcp-google-sheets`） | MCP 壳，把库的 tools 注册为 MCP 工具，构建时 vendor 库源码 |
+| `packages/yuppie-google-sheets` | PyPI（`pip install yuppie-google-sheets`） | 纯 Google Sheets/Drive 客户端库，**无 MCP 依赖** |
+| `packages/yuppie-mcp-google-sheets` | PyPI（`uvx yuppie-mcp-google-sheets`），依赖库包 | MCP 壳，把库的 tools 注册为 MCP 工具 |
 
 只想在 Python 项目里操作 Google Sheets、避免 MCP 版本冲突？直接装库包：
 
 ```bash
-uv add "yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git#subdirectory=packages/yuppie-google-sheets"
-
-# 锁定版本（推荐生产环境）：@tag / @分支 / @commit 均可，如
-yuppie-google-sheets @ git+https://github.com/yuppie1949/yuppie-mcp-google-sheets.git@v0.3.2#subdirectory=packages/yuppie-google-sheets
+uv add yuppie-google-sheets        # 或 pip install yuppie-google-sheets
 ```
 
 ```python

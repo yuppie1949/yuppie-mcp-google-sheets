@@ -1781,16 +1781,12 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "yuppie-mcp-google-sheets"
-version = "0.3.1"
+version = "0.3.3"
 source = { editable = "packages/yuppie-mcp-google-sheets" }
 dependencies = [
-    { name = "google-api-python-client" },
-    { name = "google-auth" },
-    { name = "gspread" },
     { name = "mcp" },
     { name = "pydantic" },
-    { name = "python-dotenv" },
-    { name = "requests" },
+    { name = "yuppie-google-sheets" },
 ]
 
 [package.optional-dependencies]
@@ -1803,16 +1799,12 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "google-api-python-client", specifier = ">=2.0.0" },
-    { name = "google-auth", specifier = ">=2.0.0" },
-    { name = "gspread", specifier = ">=6.0.0" },
     { name = "mcp", specifier = ">=2.0.0,<3.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "requests", specifier = ">=2.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.0" },
+    { name = "yuppie-google-sheets", editable = "packages/yuppie-google-sheets" },
 ]
 provides-extras = ["dev"]
